@@ -39,4 +39,24 @@ describe('byteBars', () => {
     expect(fig.querySelectorAll('.byte-classical .seg').length).toBe(1); // no PQ segment
     expect(fig.querySelectorAll('.byte-pq .seg').length).toBe(1); // no classical segment
   });
+
+  it('unit toggle switches labels between bytes, KB, and ×-factor', () => {
+    const f = byteBars({
+      caption: 'c',
+      note: 'n',
+      rows: [
+        { approach: 'classical', label: 'Classical', classicalBytes: 64, pqBytes: 0 },
+        { approach: 'pq', label: 'PQ', classicalBytes: 0, pqBytes: 2272 },
+        { approach: 'hybrid', label: 'Hybrid', classicalBytes: 64, pqBytes: 2272 },
+      ],
+    });
+    const total = () => (f.querySelector('.byte-hybrid .brl-total') as HTMLElement).textContent ?? '';
+    const btn = (t: string) => [...f.querySelectorAll('.unit-btn')].find((b) => b.textContent === t) as HTMLButtonElement;
+
+    expect(total()).toBe('2,336 B');
+    btn('KB').click();
+    expect(total()).toBe('2.28 KB');
+    btn('×').click();
+    expect(total()).toBe('36.5×'); // 2336 / 64
+  });
 });

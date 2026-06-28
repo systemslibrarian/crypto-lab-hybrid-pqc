@@ -8,6 +8,8 @@ import {
   DEPLOYMENTS,
   STANDARDS,
   CRYPTO_AGILITY,
+  PROTOCOL_FIDELITY,
+  CAVEATS,
 } from '../data.ts';
 
 export function buildHero(): HTMLElement {
@@ -68,6 +70,13 @@ export function buildRealWorld(): HTMLElement {
       el('span', { 'aria-hidden': 'true' }, '↗'),
     ]);
 
+  const badges = (kind: string, statusLabel: string, verified: string) =>
+    el('div', { class: 'prov' }, [
+      el('span', { class: 'prov-kind' }, kind),
+      el('span', { class: 'prov-status' }, statusLabel),
+      el('span', { class: 'prov-date', title: 'Last verified' }, `verified ${verified}`),
+    ]);
+
   const deployments = el(
     'div',
     { class: 'deploy-grid' },
@@ -76,6 +85,7 @@ export function buildRealWorld(): HTMLElement {
         el('h4', {}, d.system),
         el('code', { class: 'deploy-scheme' }, d.scheme),
         el('p', {}, d.note),
+        badges(d.kind, d.status, d.verified),
         refLink(d.ref, d.system),
       ]),
     ),
@@ -88,6 +98,7 @@ export function buildRealWorld(): HTMLElement {
       el('li', {}, [
         el('span', { class: 'std-id' }, s.id),
         el('span', { class: 'std-title' }, s.title),
+        el('span', { class: 'std-status' }, s.status),
         refLink(s.ref, s.id),
       ]),
     ),
@@ -108,5 +119,39 @@ export function buildRealWorld(): HTMLElement {
     standards,
     el('h3', { class: 'subhead' }, 'Crypto-agility — why hybrid is a transition, not a destination'),
     agility,
+  ]);
+}
+
+export function buildProtocolFidelity(): HTMLElement {
+  const head = el('tr', {}, [
+    el('th', { scope: 'col' }, 'Construction'),
+    el('th', { scope: 'col' }, 'How the two secrets combine'),
+    el('th', { scope: 'col' }, 'Notes'),
+  ]);
+  const rows = PROTOCOL_FIDELITY.map((r) =>
+    el('tr', { class: r.lab ? 'pf-lab' : '' }, [
+      el('th', { scope: 'row' }, [r.system, r.lab ? el('span', { class: 'pf-tag' }, ' this lab') : null]),
+      el('td', {}, el('code', {}, r.combine)),
+      el('td', {}, r.note),
+    ]),
+  );
+  return el('section', { class: 'section', 'aria-labelledby': 'sec-fidelity' }, [
+    el('h2', { id: 'sec-fidelity' }, '🔬 Lab vs. Real Protocols'),
+    el('p', { class: 'lede' }, 'This is a teaching model, not a wire format. Here is exactly how its combiner differs from the constructions deployed in production — all of which share the property that both secrets are required.'),
+    el('div', { class: 'table-scroll' }, [
+      el('table', { class: 'fidelity' }, [el('thead', {}, head), el('tbody', {}, rows)]),
+    ]),
+  ]);
+}
+
+export function buildCaveats(): HTMLElement {
+  return el('section', { class: 'section', 'aria-labelledby': 'sec-scope' }, [
+    el('h2', { id: 'sec-scope' }, '⚠️ Scope & Honest Caveats'),
+    el('p', { class: 'lede' }, 'What this lab deliberately does not model — stated so its claims aren’t over-read.'),
+    el(
+      'ul',
+      { class: 'caveats' },
+      CAVEATS.map((c) => el('li', {}, [el('span', { class: 'cav-mark', 'aria-hidden': 'true' }, '•'), c])),
+    ),
   ]);
 }

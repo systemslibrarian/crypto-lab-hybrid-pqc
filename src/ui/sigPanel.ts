@@ -1,15 +1,17 @@
 // Hybrid digital signatures — the same three-column comparison for signing.
 // Sign a message three ways, compare signature sizes and verify times, then use
-// the threat switches to see when a forged signature would be accepted.
+// the threat switches to see when a forged signature would be accepted. The
+// anatomy block shows the per-scheme verifier checks behind each verdict.
 
 import { el, clear, hexBox, announce } from './dom.ts';
 import { byteBars } from './viz.ts';
+import { sigAnatomy } from './anatomy.ts';
+import { signOne, signAll, rebenchSigCol, setMessage } from './actions.ts';
 import { SIGS, classicalSig, pqSig } from '../crypto/sign.ts';
-import { runSig, forgeryAccepted } from '../crypto/session.ts';
+import { forgeryAccepted } from '../crypto/session.ts';
 import { status, type SecurityStatus } from '../crypto/compromise.ts';
-import { formatBytes, formatMs, toHex } from '../crypto/metrics.ts';
+import { formatBytes, formatMs, formatRange, toHex, type Timing } from '../crypto/metrics.ts';
 import { APPROACHES, type Approach } from '../crypto/types.ts';
-import { utf8ToBytes } from '@noble/hashes/utils';
 import type { Store } from './store.ts';
 
 const VERDICT: Record<SecurityStatus, { icon: string; label: string }> = {
@@ -22,6 +24,16 @@ function metricRow(label: string, value: string): HTMLElement {
   return el('div', { class: 'metric' }, [
     el('span', { class: 'metric-label' }, label),
     el('span', { class: 'metric-value' }, value),
+  ]);
+}
+
+function timingRow(label: string, t: Timing): HTMLElement {
+  return el('div', { class: 'metric' }, [
+    el('span', { class: 'metric-label' }, label),
+    el('span', { class: 'metric-value' }, [
+      formatMs(t.median),
+      el('span', { class: 'tm-range' }, ` (${formatRange(t)})`),
+    ]),
   ]);
 }
 
@@ -55,16 +67,20 @@ function buildColumn(store: Store, approach: Approach): HTMLElement {
 
     if (!run) {
       body.append(
-        el('button', { class: 'btn establish', type: 'button', onclick: () => sign() }, 'Sign message'),
+        el('button', { class: 'btn establish', type: 'button', onclick: () => signOne(store, approach) }, 'Sign message'),
       );
       return;
     }
 
     body.append(
       el('div', { class: 'metrics timings' }, [
-        metricRow('Keygen', formatMs(run.timings.keygenMs)),
-        metricRow('Sign', formatMs(run.timings.signMs)),
-        metricRow('Verify', formatMs(run.timings.verifyMs)),
+        timingRow('Keygen', run.timings.keygen),
+        timingRow('Sign', run.timings.sign),
+        timingRow('Verify', run.timings.verify),
+      ]),
+      el('div', { class: 'tm-foot' }, [
+        el('span', { class: 'tm-note' }, `median of ${run.timings.sign.runs} runs · JS reference impl`),
+        el('button', { class: 'btn tiny', type: 'button', onclick: () => rebenchSigCol(store, approach) }, '↻ re-time'),
       ]),
       hexBox('Signature', toHex(run.signature, 24)),
       el('p', { class: `match ${run.verified ? 'ok' : 'bad'}` }, [
@@ -79,25 +95,15 @@ function buildColumn(store: Store, approach: Approach): HTMLElement {
         el('span', { 'aria-hidden': 'true' }, meta.icon + ' '),
         el('strong', {}, meta.label),
       ]),
+      sigAnatomy(approach, store.state.threats),
     ]);
     if (forgeryAccepted(approach, store.state.threats)) {
       statusEl.append(
         el('p', { class: 'attacker' }, 'Every algorithm this verifier checks is broken — a forged signature passes.'),
       );
-    } else if (st === 'hedge-holding') {
-      const survivor = store.state.threats.classicalBroken ? scheme.algos[1] : scheme.algos[0];
-      statusEl.append(
-        el('p', { class: 'attacker safe' }, `Verifier still requires a valid ${survivor.name} signature — forgery rejected.`),
-      );
     }
     body.append(statusEl);
-    body.append(el('button', { class: 'btn establish ghost', type: 'button', onclick: () => sign() }, 'Re-sign'));
-  }
-
-  function sign() {
-    store.state.sig[approach] = runSig(approach, utf8ToBytes(store.state.message));
-    announce(`${scheme.label} signature created, ${scheme.sizes.signature} bytes.`);
-    store.emit('sig');
+    body.append(el('button', { class: 'btn establish ghost', type: 'button', onclick: () => signOne(store, approach) }, 'Re-sign'));
   }
 
   store.on('sig', paint);
@@ -111,14 +117,13 @@ export function buildSigPanel(store: Store): HTMLElement {
     class: 'msg-input',
     rows: 2,
     'aria-describedby': 'sig-msg-hint',
-    oninput: (e) => {
-      store.state.message = (e.target as HTMLTextAreaElement).value;
-      // Old signatures were over the previous message — invalidate them.
-      for (const a of APPROACHES) store.state.sig[a] = null;
-      store.emit('sig');
-    },
+    oninput: (e) => setMessage(store, (e.target as HTMLTextAreaElement).value),
   });
   textarea.value = store.state.message;
+  // Keep the field in sync if the message changes elsewhere (URL load / reset).
+  store.on('sig', () => {
+    if (textarea.value !== store.state.message) textarea.value = store.state.message;
+  });
 
   const grid = el(
     'div',
@@ -161,16 +166,7 @@ export function buildSigPanel(store: Store): HTMLElement {
       el('span', { id: 'sig-msg-hint', class: 'hint' }, 'Edit the text, then sign — verification is over these exact bytes.'),
     ]),
     el('div', { class: 'panel-actions' }, [
-      el('button', {
-        class: 'btn primary',
-        type: 'button',
-        onclick: () => {
-          const msg = utf8ToBytes(store.state.message);
-          for (const a of APPROACHES) store.state.sig[a] = runSig(a, msg);
-          announce('Message signed three ways.');
-          store.emit('sig');
-        },
-      }, 'Sign with all three'),
+      el('button', { class: 'btn primary', type: 'button', onclick: () => { signAll(store); announce('Message signed three ways.'); } }, 'Sign with all three'),
     ]),
     grid,
   ]);

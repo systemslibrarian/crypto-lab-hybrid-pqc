@@ -1,5 +1,25 @@
 import { describe, it, expect } from 'vitest';
-import { formatBytes, formatMs, toHex, bytesEqual } from './metrics.ts';
+import { formatBytes, formatMs, formatRange, toHex, bytesEqual, benchDist } from './metrics.ts';
+
+describe('benchDist', () => {
+  it('returns a median bracketed by min and max over the requested runs', () => {
+    let acc = 0;
+    const t = benchDist(() => {
+      for (let i = 0; i < 200; i++) acc += i;
+      if (acc < 0) throw new Error('unreachable');
+    }, 7);
+    expect(t.runs).toBe(7);
+    expect(t.min).toBeGreaterThanOrEqual(0);
+    expect(t.min).toBeLessThanOrEqual(t.median);
+    expect(t.median).toBeLessThanOrEqual(t.max);
+  });
+});
+
+describe('formatRange', () => {
+  it('renders min–max with a single unit', () => {
+    expect(formatRange({ median: 1, min: 0.02, max: 0.05, runs: 7 })).toBe('0.02–0.05 ms');
+  });
+});
 
 describe('formatBytes', () => {
   it('shows raw bytes under 1 KB', () => {

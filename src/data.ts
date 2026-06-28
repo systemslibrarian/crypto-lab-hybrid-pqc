@@ -28,12 +28,20 @@ export const WHY_HYBRID: WhyPoint[] = [
   },
 ];
 
+// Provenance metadata: PQC deployment facts move fast, so each claim carries a
+// source kind, a status, and the date it was last verified — so the section
+// reads as maintained and auditable, not a static snapshot.
+const VERIFIED = '2026-06-28';
+
 export interface Deployment {
   system: string;
   scheme: string;
   note: string;
   /** Authoritative source so every claim here is verifiable. */
   ref: string;
+  kind: string;
+  status: string;
+  verified: string;
 }
 
 export const DEPLOYMENTS: Deployment[] = [
@@ -42,24 +50,36 @@ export const DEPLOYMENTS: Deployment[] = [
     scheme: 'X25519MLKEM768',
     note: 'A hybrid key-exchange group (IANA codepoint 0x11EC) negotiated by default in current browsers and CDNs. Both sides feed ml_kem_ss ‖ x25519_ss straight into the TLS key schedule.',
     ref: 'https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/',
+    kind: 'IETF draft',
+    status: 'Default-on',
+    verified: VERIFIED,
   },
   {
     system: 'OpenSSH',
     scheme: 'mlkem768x25519-sha256, sntrup761x25519-sha512',
     note: 'Post-quantum hybrid KEX has been the SSH default since 9.0 (sntrup761); the ML-KEM hybrid arrived in 9.9 and became the default in 10.0 (2025).',
     ref: 'https://www.openssh.com/pq.html',
+    kind: 'Vendor docs',
+    status: 'Default-on',
+    verified: VERIFIED,
   },
   {
     system: 'Signal',
     scheme: 'PQXDH (X25519 + ML-KEM-1024)',
     note: 'The Signal protocol’s initial key agreement (X3DH) was upgraded to the hybrid PQXDH and deployed in late 2023.',
     ref: 'https://signal.org/docs/specifications/pqxdh/',
+    kind: 'Protocol spec',
+    status: 'Deployed',
+    verified: VERIFIED,
   },
   {
     system: 'Apple iMessage',
     scheme: 'PQ3 (ECDH + ML-KEM, PQ ratchet)',
     note: 'Combines classical ECDH with ML-KEM (Kyber) for the initial key and re-establishes PQ keys continuously. Rolled out in iOS 17.4 (2024).',
     ref: 'https://security.apple.com/blog/imessage-pq3/',
+    kind: 'Vendor research',
+    status: 'Deployed',
+    verified: VERIFIED,
   },
 ];
 
@@ -67,6 +87,9 @@ export interface Standard {
   id: string;
   title: string;
   ref: string;
+  kind: string;
+  status: string;
+  verified: string;
 }
 
 export const STANDARDS: Standard[] = [
@@ -74,27 +97,83 @@ export const STANDARDS: Standard[] = [
     id: 'FIPS 203',
     title: 'ML-KEM (Module-Lattice KEM, the standardized Kyber)',
     ref: 'https://csrc.nist.gov/pubs/fips/203/final',
+    kind: 'NIST',
+    status: 'Final',
+    verified: VERIFIED,
   },
   {
     id: 'FIPS 204',
     title: 'ML-DSA (Module-Lattice signatures, the standardized Dilithium)',
     ref: 'https://csrc.nist.gov/pubs/fips/204/final',
+    kind: 'NIST',
+    status: 'Final',
+    verified: VERIFIED,
   },
   {
     id: 'FIPS 205',
     title: 'SLH-DSA (stateless hash-based signatures, the standardized SPHINCS+)',
     ref: 'https://csrc.nist.gov/pubs/fips/205/final',
+    kind: 'NIST',
+    status: 'Final',
+    verified: VERIFIED,
   },
   {
-    id: 'NIST SP 800-227 (draft)',
+    id: 'NIST SP 800-227',
     title: 'Recommendations for Key-Encapsulation Mechanisms',
     ref: 'https://csrc.nist.gov/pubs/sp/800/227/ipd',
+    kind: 'NIST',
+    status: 'Draft (IPD)',
+    verified: VERIFIED,
   },
   {
     id: 'IETF draft-ietf-tls-hybrid-design',
     title: 'Hybrid key exchange in TLS 1.3',
     ref: 'https://datatracker.ietf.org/doc/draft-ietf-tls-hybrid-design/',
+    kind: 'IETF',
+    status: 'Draft',
+    verified: VERIFIED,
   },
+];
+
+/** How the two halves are actually combined across the lab and real protocols. */
+export interface FidelityRow {
+  system: string;
+  combine: string;
+  note: string;
+  lab?: boolean;
+}
+
+export const PROTOCOL_FIDELITY: FidelityRow[] = [
+  {
+    system: 'This lab',
+    combine: 'HKDF-SHA256(ss_x ‖ ss_mlkem), binding both ciphertexts',
+    note: 'Robustness-oriented teaching construction — not a wire format.',
+    lab: true,
+  },
+  {
+    system: 'TLS 1.3 · X25519MLKEM768',
+    combine: 'ml_kem_ss ‖ x25519_ss → TLS key schedule',
+    note: 'Plain concatenation fed into HKDF-Extract (RFC 8446 §7.1).',
+  },
+  {
+    system: 'OpenSSH · mlkem768x25519-sha256',
+    combine: 'SHA-256(K_mlkem ‖ K_x25519)',
+    note: 'Hashed concatenation, per the SSH kex algorithm.',
+  },
+  {
+    system: 'Signal PQXDH / iMessage PQ3',
+    combine: 'PQ KEM secret mixed into the protocol KDF beside the DH secrets',
+    note: 'Hybrid agreement embedded in a larger ratchet design.',
+  },
+];
+
+/** What the lab deliberately does NOT model — stated so trust isn't overclaimed. */
+export const CAVEATS: string[] = [
+  'It simulates the event of an algorithm being broken — it does not (and cannot, in a browser) actually break X25519, Ed25519, ML-KEM, or ML-DSA.',
+  'Out of scope: side-channel and timing attacks, RNG/seed failure, and downgrade or negotiation attacks.',
+  'Out of scope: authentication, certificates, PKI, identity binding, and transcript binding beyond this educational model.',
+  'The KEM combiner and composite-signature layout are teaching constructions, not production-safe wire formats.',
+  'Malformed ciphertexts/signatures are rejected, but exhaustive parsing-attack handling is not modeled.',
 ];
 
 /** One qualitative rating cell in the trade-off matrix. */

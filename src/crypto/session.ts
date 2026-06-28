@@ -11,9 +11,15 @@
 
 import { KEMS, classicalKem, pqKem, combineKem, splitHybrid, type KemSizes } from './kem.ts';
 import { SIGS, type SigSizes } from './sign.ts';
-import { bench, bytesEqual } from './metrics.ts';
+import { benchDist, bytesEqual, type Timing } from './metrics.ts';
 import { isCompromised, type CompromiseState } from './compromise.ts';
 import type { Approach } from './types.ts';
+
+export interface KemTimings {
+  keygen: Timing;
+  encapsulate: Timing;
+  decapsulate: Timing;
+}
 
 // ---------------------------------------------------------------------------
 // KEM session
@@ -23,8 +29,11 @@ export interface KemSession {
   approach: Approach;
   label: string;
   sizes: KemSizes;
-  timings: { keygenMs: number; encapsulateMs: number; decapsulateMs: number };
+  timings: KemTimings;
   publicKey: Uint8Array;
+  /** Kept in memory (never persisted) so timings can be re-run on this exact
+   *  transcript without regenerating the keys and changing the session key. */
+  secretKey: Uint8Array;
   ciphertext: Uint8Array;
   senderKey: Uint8Array;
   receiverKey: Uint8Array;
@@ -38,18 +47,21 @@ export interface KemSession {
   components: { classical?: Uint8Array; pq?: Uint8Array };
 }
 
+function benchKem(approach: Approach, publicKey: Uint8Array, secretKey: Uint8Array, ciphertext: Uint8Array): KemTimings {
+  const kem = KEMS[approach];
+  return {
+    keygen: benchDist(() => void kem.keygen()),
+    encapsulate: benchDist(() => void kem.encapsulate(publicKey)),
+    decapsulate: benchDist(() => void kem.decapsulate(ciphertext, secretKey)),
+  };
+}
+
 export function runKem(approach: Approach): KemSession {
   const kem = KEMS[approach];
 
   const kp = kem.keygen();
   const enc = kem.encapsulate(kp.publicKey);
   const receiverKey = kem.decapsulate(enc.ciphertext, kp.secretKey);
-
-  const timings = {
-    keygenMs: bench(() => void kem.keygen()),
-    encapsulateMs: bench(() => void kem.encapsulate(kp.publicKey)),
-    decapsulateMs: bench(() => void kem.decapsulate(enc.ciphertext, kp.secretKey)),
-  };
 
   // Recover the genuine component secrets from the receiver's view so the
   // attacker model is consistent with this exact transcript.
@@ -72,14 +84,20 @@ export function runKem(approach: Approach): KemSession {
     approach,
     label: kem.label,
     sizes: kem.sizes,
-    timings,
+    timings: benchKem(approach, kp.publicKey, kp.secretKey, enc.ciphertext),
     publicKey: kp.publicKey,
+    secretKey: kp.secretKey,
     ciphertext: enc.ciphertext,
     senderKey: enc.sharedSecret,
     receiverKey,
     match: bytesEqual(enc.sharedSecret, receiverKey),
     components,
   };
+}
+
+/** Re-measure timings on the SAME transcript (keys/ciphertext/session key unchanged). */
+export function rebenchKem(s: KemSession): KemSession {
+  return { ...s, timings: benchKem(s.approach, s.publicKey, s.secretKey, s.ciphertext) };
 }
 
 /**
@@ -101,15 +119,38 @@ export function attackerRecoversKey(s: KemSession, state: CompromiseState): Uint
 // Signature run
 // ---------------------------------------------------------------------------
 
+export interface SigTimings {
+  keygen: Timing;
+  sign: Timing;
+  verify: Timing;
+}
+
 export interface SigRun {
   approach: Approach;
   label: string;
   sizes: SigSizes;
-  timings: { keygenMs: number; signMs: number; verifyMs: number };
+  timings: SigTimings;
   message: Uint8Array;
+  publicKey: Uint8Array;
+  secretKey: Uint8Array;
   signature: Uint8Array;
   /** Honest verification of an honest signature — must be true. */
   verified: boolean;
+}
+
+function benchSig(
+  approach: Approach,
+  publicKey: Uint8Array,
+  secretKey: Uint8Array,
+  message: Uint8Array,
+  signature: Uint8Array,
+): SigTimings {
+  const scheme = SIGS[approach];
+  return {
+    keygen: benchDist(() => void scheme.keygen(), 5),
+    sign: benchDist(() => void scheme.sign(secretKey, message), 5),
+    verify: benchDist(() => void scheme.verify(publicKey, message, signature), 5),
+  };
 }
 
 export function runSig(approach: Approach, message: Uint8Array): SigRun {
@@ -118,13 +159,22 @@ export function runSig(approach: Approach, message: Uint8Array): SigRun {
   const signature = scheme.sign(kp.secretKey, message);
   const verified = scheme.verify(kp.publicKey, message, signature);
 
-  const timings = {
-    keygenMs: bench(() => void scheme.keygen(), 6),
-    signMs: bench(() => void scheme.sign(kp.secretKey, message), 6),
-    verifyMs: bench(() => void scheme.verify(kp.publicKey, message, signature), 6),
+  return {
+    approach,
+    label: scheme.label,
+    sizes: scheme.sizes,
+    timings: benchSig(approach, kp.publicKey, kp.secretKey, message, signature),
+    message,
+    publicKey: kp.publicKey,
+    secretKey: kp.secretKey,
+    signature,
+    verified,
   };
+}
 
-  return { approach, label: scheme.label, sizes: scheme.sizes, timings, message, signature, verified };
+/** Re-measure timings on the SAME signature/keys. */
+export function rebenchSig(s: SigRun): SigRun {
+  return { ...s, timings: benchSig(s.approach, s.publicKey, s.secretKey, s.message, s.signature) };
 }
 
 /**

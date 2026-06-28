@@ -12,16 +12,21 @@ export interface AppState {
   kem: Record<Approach, KemSession | null>;
   sig: Record<Approach, SigRun | null>;
   message: string;
+  /** Active guided-tour step index, or -1 when the tour isn't running. */
+  step: number;
 }
 
 type Listener = () => void;
+
+export const DEFAULT_MESSAGE = 'Transfer $10,000 to account 4471-9920.';
 
 export class Store {
   state: AppState = {
     threats: { classicalBroken: false, pqBroken: false },
     kem: { classical: null, pq: null, hybrid: null },
     sig: { classical: null, pq: null, hybrid: null },
-    message: 'Transfer $10,000 to account 4471-9920.',
+    message: DEFAULT_MESSAGE,
+    step: -1,
   };
 
   private listeners = new Map<string, Set<Listener>>();
