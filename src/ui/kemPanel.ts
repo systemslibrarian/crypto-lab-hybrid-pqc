@@ -4,7 +4,8 @@
 // switches recolor each column to show who survives.
 
 import { el, clear, hexBox, announce } from './dom.ts';
-import { KEMS } from '../crypto/kem.ts';
+import { byteBars } from './viz.ts';
+import { KEMS, classicalKem, pqKem } from '../crypto/kem.ts';
 import { runKem, attackerRecoversKey } from '../crypto/session.ts';
 import { status, type SecurityStatus } from '../crypto/compromise.ts';
 import { formatBytes, formatMs, toHex } from '../crypto/metrics.ts';
@@ -125,12 +126,24 @@ export function buildKemPanel(store: Store): HTMLElement {
     APPROACHES.map((a) => buildColumn(store, a)),
   );
 
+  const cBytes = classicalKem.sizes.publicKey + classicalKem.sizes.ciphertext;
+  const qBytes = pqKem.sizes.publicKey + pqKem.sizes.ciphertext;
+
   return el('section', { class: 'section', 'aria-labelledby': 'sec-kem' }, [
     el('h2', { id: 'sec-kem' }, '🔑 Interactive Key Exchange'),
     el('p', { class: 'lede' }, [
       'Establish a real session key three ways. Same job, very different sizes and costs. ',
       'X25519 ciphertexts are 32 bytes; ML-KEM-768 adds a full kilobyte — and hybrid pays for both.',
     ]),
+    byteBars({
+      caption: 'Handshake bytes on the wire (public key + ciphertext)',
+      note: 'The hybrid bar is the classical bar plus the post-quantum bar, stacked — you carry both. Next to ML-KEM-768’s ~2.2 KB, the 64-byte classical half is almost free.',
+      rows: [
+        { approach: 'classical', label: 'Classical · X25519', classicalBytes: cBytes, pqBytes: 0 },
+        { approach: 'pq', label: 'Post-quantum · ML-KEM-768', classicalBytes: 0, pqBytes: qBytes },
+        { approach: 'hybrid', label: 'Hybrid · both', classicalBytes: cBytes, pqBytes: qBytes },
+      ],
+    }),
     el('div', { class: 'panel-actions' }, [
       el('button', {
         class: 'btn primary',

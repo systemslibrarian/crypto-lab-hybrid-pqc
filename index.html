@@ -26,6 +26,20 @@
       name="description"
       content="Compare classical-only, post-quantum-only, and hybrid key exchange and signatures side by side — real X25519, ML-KEM-768, Ed25519, and ML-DSA-65 sizes, timings, and the break-a-half security model behind the PQC migration."
     />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Hybrid PQC Migration — crypto-lab" />
+    <meta
+      property="og:description"
+      content="Classical vs post-quantum vs hybrid, side by side. Break one half and watch the hybrid session key and signature hold — real X25519, ML-KEM-768, Ed25519, and ML-DSA-65 in the browser."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Hybrid PQC Migration — crypto-lab" />
+    <meta
+      name="twitter:description"
+      content="Break the classical half or the post-quantum half and watch the hybrid hold. A live comparison of classical, PQ, and hybrid KEMs and signatures."
+    />
+
     <title>Hybrid PQC Migration — crypto-lab</title>
   </head>
   <body>
@@ -146,7 +160,15 @@
   })();
 </script>
 <!-- END crypto-lab shared header -->
-    <main id="app"></main>
+    <main id="app">
+      <noscript>
+        <p style="max-width: 60ch; margin: 2rem auto; padding: 0 1rem; line-height: 1.6">
+          This lab runs the cryptography live in your browser, so it needs JavaScript enabled.
+          It performs no network calls and sends nothing anywhere — every key is generated in
+          memory and discarded.
+        </p>
+      </noscript>
+    </main>
     <div id="a11y-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
     <footer class="scripture-footer">
       <p>So whether you eat or drink or whatever you do, do it all for the glory of God. — 1 Corinthians 10:31</p>

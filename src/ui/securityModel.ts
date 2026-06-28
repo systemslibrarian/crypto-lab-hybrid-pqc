@@ -21,6 +21,7 @@ function ensurePopulated(store: Store): void {
 
 export function buildSecurityModel(store: Store): HTMLElement {
   const summary = el('p', { class: 'threat-summary', role: 'status', 'aria-live': 'polite' });
+  const inputs: HTMLInputElement[] = [];
 
   const toggle = (
     id: string,
@@ -39,6 +40,7 @@ export function buildSecurityModel(store: Store): HTMLElement {
         paint();
       },
     });
+    inputs.push(input);
     return el('label', { class: 'switch', for: id }, [
       input,
       el('span', { class: 'switch-track', 'aria-hidden': 'true' }, el('span', { class: 'switch-thumb' })),
@@ -77,15 +79,37 @@ export function buildSecurityModel(store: Store): HTMLElement {
     summary.append(el('span', { class: 'ts-icon', 'aria-hidden': 'true' }, icon), el('span', {}, text));
   }
 
+  function reset() {
+    store.state.threats.classicalBroken = false;
+    store.state.threats.pqBroken = false;
+    for (const a of APPROACHES) {
+      store.state.kem[a] = null;
+      store.state.sig[a] = null;
+    }
+    for (const i of inputs) i.checked = false;
+    store.emit('threats', 'kem', 'sig');
+    paint();
+  }
+
   paint();
 
+  const legend = el('div', { class: 'status-legend', 'aria-hidden': 'true' }, [
+    el('span', { class: 'sl' }, [el('span', { class: 'sl-dot sl-secure' }), '✅ Secure']),
+    el('span', { class: 'sl' }, [el('span', { class: 'sl-dot sl-hedge' }), '🛡️ Hedge holding (one half down)']),
+    el('span', { class: 'sl' }, [el('span', { class: 'sl-dot sl-broken' }), '⛔ Broken']),
+  ]);
+
   return el('section', { class: 'section', 'aria-labelledby': 'sec-threat' }, [
-    el('h2', { id: 'sec-threat' }, '🧪 The Security Model — break a half'),
+    el('div', { class: 'model-head' }, [
+      el('h2', { id: 'sec-threat' }, '🧪 The Security Model — break a half'),
+      el('button', { class: 'btn reset', type: 'button', onclick: () => reset() }, '↺ Reset demo'),
+    ]),
     el('p', { class: 'lede' }, [
       'Hybrid’s promise: the session key and the signature stay secure as long as ',
       el('strong', {}, 'at least one'),
-      ' of the two algorithms is unbroken. Flip these switches and watch the columns below react in real time.',
+      ' of the two algorithms is unbroken. Flip these switches and watch the key-exchange columns above and the signature columns below react in real time.',
     ]),
+    legend,
     el('div', { class: 'switches' }, [
       toggle(
         'break-classical',

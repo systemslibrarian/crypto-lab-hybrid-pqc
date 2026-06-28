@@ -84,4 +84,29 @@ describe('UI smoke', () => {
     // signatures cleared → the sign button is back, no match line yet
     expect(colStatus(root, 'sig', 'hybrid')).toBe('idle');
   });
+
+  it('reset clears sessions and unchecks the threat switches', () => {
+    const { root } = mount();
+    clickByText(root, 'Establish all three');
+    const sw = root.querySelector('#break-classical') as HTMLInputElement;
+    sw.checked = true;
+    sw.dispatchEvent(new Event('change'));
+    expect(colStatus(root, 'kem', 'classical')).toBe('broken');
+
+    clickByText(root, 'Reset demo');
+    expect(sw.checked).toBe(false);
+    expect(colStatus(root, 'kem', 'classical')).toBe('idle');
+    expect(colStatus(root, 'kem', 'hybrid')).toBe('idle');
+  });
+
+  it('shows byte-size comparison bars in both panels before establishing', () => {
+    const { root } = mount();
+    const figs = root.querySelectorAll('.bytefig');
+    expect(figs.length).toBe(2); // KEM + signatures
+    // hybrid bar's accessible label is the sum of the two halves
+    const hybridTracks = [...root.querySelectorAll('.byte-hybrid .byte-track')];
+    expect(hybridTracks.length).toBe(2);
+    expect(hybridTracks[0].getAttribute('aria-label')).toContain('2336 bytes total'); // KEM: 64 + 2272
+    expect(hybridTracks[1].getAttribute('aria-label')).toContain('5357 bytes total'); // sig: 96 + 5261
+  });
 });

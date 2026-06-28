@@ -3,7 +3,8 @@
 // the threat switches to see when a forged signature would be accepted.
 
 import { el, clear, hexBox, announce } from './dom.ts';
-import { SIGS } from '../crypto/sign.ts';
+import { byteBars } from './viz.ts';
+import { SIGS, classicalSig, pqSig } from '../crypto/sign.ts';
 import { runSig, forgeryAccepted } from '../crypto/session.ts';
 import { status, type SecurityStatus } from '../crypto/compromise.ts';
 import { formatBytes, formatMs, toHex } from '../crypto/metrics.ts';
@@ -130,6 +131,30 @@ export function buildSigPanel(store: Store): HTMLElement {
     el('p', { class: 'lede' }, [
       'Signatures show the size gap most starkly: an Ed25519 signature is 64 bytes; ML-DSA-65 is ~3.3 KB — over 50× larger. A hybrid signature carries both.',
     ]),
+    byteBars({
+      caption: 'Verification material per message (public key + signature)',
+      note: 'A hybrid signature ships an Ed25519 signature and an ML-DSA-65 signature side by side; the verifier requires both, so both bytes travel.',
+      rows: [
+        {
+          approach: 'classical',
+          label: 'Classical · Ed25519',
+          classicalBytes: classicalSig.sizes.publicKey + classicalSig.sizes.signature,
+          pqBytes: 0,
+        },
+        {
+          approach: 'pq',
+          label: 'Post-quantum · ML-DSA-65',
+          classicalBytes: 0,
+          pqBytes: pqSig.sizes.publicKey + pqSig.sizes.signature,
+        },
+        {
+          approach: 'hybrid',
+          label: 'Hybrid · both',
+          classicalBytes: classicalSig.sizes.publicKey + classicalSig.sizes.signature,
+          pqBytes: pqSig.sizes.publicKey + pqSig.sizes.signature,
+        },
+      ],
+    }),
     el('div', { class: 'msg-field' }, [
       el('label', { for: 'sig-message' }, 'Message to sign'),
       textarea,
