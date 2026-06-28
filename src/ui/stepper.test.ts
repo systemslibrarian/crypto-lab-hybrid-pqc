@@ -32,6 +32,10 @@ describe('guided tour', () => {
     click(sec, 'Next'); // step 3
     click(sec, 'Next'); // step 4 — lattices fall too
     expect(store.state.threats).toEqual({ classicalBroken: true, pqBroken: true });
+
+    click(sec, 'Next'); // step 5 — recap returns to a single break (hybrid holds)
+    expect(store.state.step).toBe(5);
+    expect(store.state.threats).toEqual({ classicalBroken: true, pqBroken: false });
   });
 
   it('Back is reversible (re-derives the earlier threat state)', () => {

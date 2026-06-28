@@ -15,18 +15,24 @@ interface Step {
   target: string;
 }
 
-const STEPS: Step[] = [
-  { title: 'Establish a session key all three ways.', target: 'sec-kem', takeaway: 'Same job, wildly different sizes — the hybrid carries both halves on the wire.' },
-  { title: 'Sign the message all three ways.', target: 'sec-sig', takeaway: 'An ML-DSA-65 signature is ~50× an Ed25519 one; the hybrid ships both.' },
-  { title: 'A quantum computer arrives (classical falls).', target: 'sec-threat', takeaway: 'Classical-only collapses. Pure PQ is untouched. The hybrid is now hedge-holding.' },
-  { title: 'Look at the key-exchange columns.', target: 'sec-kem', takeaway: 'The classical key is recovered — but the hybrid’s ML-KEM half still protects its session key.' },
-  { title: 'Now lattices fall too (PQ also breaks).', target: 'sec-threat', takeaway: 'Only with BOTH halves broken does the hybrid finally fail.' },
-  { title: 'That’s the hedge.', target: 'sec-kem', takeaway: 'A hybrid stays secure against any single break — the realistic threat during the migration.' },
+interface TourStep extends Step {
+  threat: { classicalBroken: boolean; pqBroken: boolean };
+}
+
+const STEPS: TourStep[] = [
+  { title: 'Establish a session key all three ways.', target: 'sec-kem', takeaway: 'Same job, wildly different sizes — the hybrid carries both halves on the wire.', threat: { classicalBroken: false, pqBroken: false } },
+  { title: 'Sign the message all three ways.', target: 'sec-sig', takeaway: 'An ML-DSA-65 signature is ~50× an Ed25519 one; the hybrid ships both.', threat: { classicalBroken: false, pqBroken: false } },
+  { title: 'A quantum computer arrives (classical falls).', target: 'sec-threat', takeaway: 'Classical-only collapses. Pure PQ is untouched. The hybrid is now hedge-holding.', threat: { classicalBroken: true, pqBroken: false } },
+  { title: 'Look at the key-exchange columns.', target: 'sec-kem', takeaway: 'The classical key is recovered — but the hybrid’s ML-KEM half still protects its session key.', threat: { classicalBroken: true, pqBroken: false } },
+  { title: 'Now imagine lattices ALSO fall (PQ breaks too).', target: 'sec-threat', takeaway: 'Only with BOTH halves broken at once does the hybrid finally fail.', threat: { classicalBroken: true, pqBroken: true } },
+  { title: 'Recap: back to a single break — the realistic case.', target: 'sec-kem', takeaway: 'With just one algorithm broken the hybrid holds. That’s the whole point: it survives any single failure, which is the threat we actually face.', threat: { classicalBroken: true, pqBroken: false } },
 ];
 
-/** The cumulative threat state implied by reaching step i. */
+/** Public for the URL loader to clamp the step param without a magic number. */
+export const STEP_COUNT = STEPS.length;
+
 function threatFor(i: number): { classicalBroken: boolean; pqBroken: boolean } {
-  return { classicalBroken: i >= 2, pqBroken: i >= 4 };
+  return { ...STEPS[i].threat };
 }
 
 function highlight(id: string): void {

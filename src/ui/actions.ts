@@ -10,7 +10,7 @@ import {
 } from '../crypto/session.ts';
 import { APPROACHES, type Approach } from '../crypto/types.ts';
 import { utf8ToBytes } from '@noble/hashes/utils';
-import type { Store } from './store.ts';
+import { DEFAULT_MESSAGE, type Store } from './store.ts';
 
 export function establishKem(store: Store, a: Approach): void {
   store.state.kem[a] = runKem(a);
@@ -71,6 +71,7 @@ export function resetDemo(store: Store): void {
   store.state.threats.classicalBroken = false;
   store.state.threats.pqBroken = false;
   store.state.step = -1;
+  store.state.message = DEFAULT_MESSAGE;
   for (const a of APPROACHES) {
     store.state.kem[a] = null;
     store.state.sig[a] = null;

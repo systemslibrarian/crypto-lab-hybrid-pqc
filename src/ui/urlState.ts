@@ -4,9 +4,10 @@
 // they are recomputed locally on load. Param keys are short on purpose.
 
 import { ensurePopulated } from './actions.ts';
+import { STEP_COUNT } from './stepper.ts';
 import { DEFAULT_MESSAGE, type Store } from './store.ts';
 
-const MAX_MSG = 280;
+export const MAX_MSG = 280;
 
 /** Read state from the URL into the store (call before building the UI). */
 export function applyUrl(store: Store): void {
@@ -26,7 +27,7 @@ export function applyUrl(store: Store): void {
   const step = params.get('step');
   if (step !== null) {
     const n = parseInt(step, 10);
-    if (Number.isFinite(n)) store.state.step = Math.max(-1, Math.min(5, n));
+    if (Number.isFinite(n)) store.state.step = Math.max(-1, Math.min(STEP_COUNT - 1, n));
   }
 
   // If the shared state implies broken algorithms or an active tour, populate

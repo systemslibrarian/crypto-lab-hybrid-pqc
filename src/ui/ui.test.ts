@@ -5,7 +5,7 @@
 // wiring, not just the crypto.
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Store } from './store.ts';
+import { Store, DEFAULT_MESSAGE } from './store.ts';
 import { buildKemPanel } from './kemPanel.ts';
 import { buildSigPanel } from './sigPanel.ts';
 import { buildSecurityModel } from './securityModel.ts';
@@ -93,10 +93,16 @@ describe('UI smoke', () => {
     sw.dispatchEvent(new Event('change'));
     expect(colStatus(root, 'kem', 'classical')).toBe('broken');
 
+    // Edit the message too, so we can confirm reset restores the default.
+    const ta = root.querySelector('#sig-message') as HTMLTextAreaElement;
+    ta.value = 'something else entirely';
+    ta.dispatchEvent(new Event('input'));
+
     clickByText(root, 'Reset demo');
     expect(sw.checked).toBe(false);
     expect(colStatus(root, 'kem', 'classical')).toBe('idle');
     expect(colStatus(root, 'kem', 'hybrid')).toBe('idle');
+    expect(ta.value).toBe(DEFAULT_MESSAGE);
   });
 
   it('shows byte-size comparison bars in both panels before establishing', () => {

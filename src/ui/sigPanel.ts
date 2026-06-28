@@ -7,6 +7,7 @@ import { el, clear, hexBox, announce } from './dom.ts';
 import { byteBars } from './viz.ts';
 import { sigAnatomy } from './anatomy.ts';
 import { signOne, signAll, rebenchSigCol, setMessage } from './actions.ts';
+import { MAX_MSG } from './urlState.ts';
 import { SIGS, classicalSig, pqSig } from '../crypto/sign.ts';
 import { forgeryAccepted } from '../crypto/session.ts';
 import { status, type SecurityStatus } from '../crypto/compromise.ts';
@@ -116,6 +117,9 @@ export function buildSigPanel(store: Store): HTMLElement {
     id: 'sig-message',
     class: 'msg-input',
     rows: 2,
+    // Capped so a message always fits in a shareable URL and the reloaded
+    // session signs the exact same bytes (see urlState MAX_MSG).
+    maxlength: MAX_MSG,
     'aria-describedby': 'sig-msg-hint',
     oninput: (e) => setMessage(store, (e.target as HTMLTextAreaElement).value),
   });
