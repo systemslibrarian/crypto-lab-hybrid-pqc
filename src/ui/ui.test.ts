@@ -110,6 +110,22 @@ describe('UI smoke', () => {
     expect(hybridTracks[1].getAttribute('aria-label')).toContain('5357 bytes total'); // sig: 96 + 5261
   });
 
+  it('flipping a switch recolors every column even if only one was established by hand', () => {
+    const { root } = mount();
+    // Establish only the first (classical) KEM column via its own button.
+    clickByText(root, 'Establish session');
+    expect(colStatus(root, 'kem', 'pq')).toBe('idle');
+
+    const sw = root.querySelector('#break-pq') as HTMLInputElement;
+    sw.checked = true;
+    sw.dispatchEvent(new Event('change'));
+
+    // The un-established columns are now populated and recolor correctly.
+    expect(colStatus(root, 'kem', 'pq')).toBe('broken');
+    expect(colStatus(root, 'kem', 'hybrid')).toBe('hedge-holding');
+    expect(colStatus(root, 'sig', 'hybrid')).toBe('hedge-holding');
+  });
+
   it('discloses how the hybrid combiner differs from the deployed TLS construction', () => {
     const { root } = mount();
     const note = root.querySelector('.impl-note');

@@ -8,14 +8,16 @@ import { APPROACHES } from '../crypto/types.ts';
 import { utf8ToBytes } from '@noble/hashes/utils';
 import type { Store } from './store.ts';
 
-/** Ensure every column has something to recolor, so flipping a switch is never a no-op. */
+/**
+ * Ensure every column has something to recolor, so flipping a switch is never a
+ * no-op — even if the user established only some columns by hand. Fills each
+ * empty column individually; never clobbers an existing session.
+ */
 function ensurePopulated(store: Store): void {
-  if (APPROACHES.every((a) => store.state.kem[a] === null)) {
-    for (const a of APPROACHES) store.state.kem[a] = runKem(a);
-  }
-  if (APPROACHES.every((a) => store.state.sig[a] === null)) {
-    const msg = utf8ToBytes(store.state.message);
-    for (const a of APPROACHES) store.state.sig[a] = runSig(a, msg);
+  const msg = utf8ToBytes(store.state.message);
+  for (const a of APPROACHES) {
+    if (store.state.kem[a] === null) store.state.kem[a] = runKem(a);
+    if (store.state.sig[a] === null) store.state.sig[a] = runSig(a, msg);
   }
 }
 
