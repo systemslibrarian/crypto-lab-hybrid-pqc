@@ -156,5 +156,17 @@ export function buildKemPanel(store: Store): HTMLElement {
       }, 'Establish all three'),
     ]),
     grid,
+    el('details', { class: 'impl-note' }, [
+      el('summary', {}, 'Implementation note: how this lab combines the two secrets'),
+      el('p', {}, [
+        'This lab derives the hybrid session key with an HKDF-SHA256 combiner that also binds both ciphertexts — a robustness-oriented construction. The deployed TLS ',
+        el('code', {}, 'X25519MLKEM768'),
+        ' group is simpler: it concatenates the two shared secrets (',
+        el('code', {}, 'ml_kem_ss ‖ x25519_ss'),
+        ') straight into the TLS 1.3 key schedule. Both share the exact property this lab demonstrates — the result is unrecoverable unless you hold ',
+        el('strong', {}, 'both'),
+        ' secrets. The X25519 half is modeled as a DHKEM (its ephemeral public key plays the role of a ciphertext) so all three approaches expose one encapsulate / decapsulate interface. Timings are honest measurements of the in-browser JavaScript reference implementations — good for relative comparison, not absolute benchmarks.',
+      ]),
+    ]),
   ]);
 }

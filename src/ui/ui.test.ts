@@ -109,4 +109,12 @@ describe('UI smoke', () => {
     expect(hybridTracks[0].getAttribute('aria-label')).toContain('2336 bytes total'); // KEM: 64 + 2272
     expect(hybridTracks[1].getAttribute('aria-label')).toContain('5357 bytes total'); // sig: 96 + 5261
   });
+
+  it('discloses how the hybrid combiner differs from the deployed TLS construction', () => {
+    const { root } = mount();
+    const note = root.querySelector('.impl-note');
+    expect(note).not.toBeNull();
+    expect(note?.textContent).toContain('X25519MLKEM768');
+    expect(note?.textContent).toContain('ml_kem_ss ‖ x25519_ss');
+  });
 });

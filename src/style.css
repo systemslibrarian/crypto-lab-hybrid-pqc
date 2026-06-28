@@ -12,6 +12,9 @@
 
 :root {
   --accent: #9b7cf0;
+  /* Darker tint reserved for white-on-accent surfaces (primary buttons) so the
+     text clears WCAG AA 4.5:1; the lighter --accent is used for tints + text. */
+  --accent-strong: #6342c6;
 
   --bg: #100e1a;
   --surface: #191527;
@@ -39,6 +42,7 @@
 
 :root[data-theme="light"] {
   --accent: #6b46d6;
+  --accent-strong: #6b46d6;
 
   --bg: #f6f3ff;
   --surface: #ffffff;
@@ -51,10 +55,10 @@
   --classical: #1366c4;
   --pq: #7c3aed;
 
-  --ok: #12915f;
-  --ok-bg: rgba(18, 145, 95, 0.1);
-  --warn: #b9760a;
-  --warn-bg: rgba(185, 118, 10, 0.12);
+  --ok: #0c7349;
+  --ok-bg: rgba(12, 115, 73, 0.1);
+  --warn: #8f5a00;
+  --warn-bg: rgba(143, 90, 0, 0.12);
   --bad: #d61f33;
   --bad-bg: rgba(214, 31, 51, 0.09);
 
@@ -131,7 +135,7 @@ body {
 .btn:active { transform: translateY(1px); }
 .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .btn.primary {
-  background: var(--accent); border-color: var(--accent);
+  background: var(--accent-strong); border-color: var(--accent-strong);
   color: #fff;
 }
 :root[data-theme="light"] .btn.primary { color: #fff; }
@@ -377,6 +381,35 @@ body {
   .hero { padding-top: 1rem; }
   .switches { flex-direction: column; }
 }
+
+/* ── Implementation note ──────────────────────────────────────────────── */
+.impl-note {
+  margin-top: 1.2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 1.1rem;
+}
+.impl-note summary {
+  cursor: pointer; font-weight: 600; font-size: 0.9rem; padding: 0.5rem 0;
+  color: var(--accent);
+}
+.impl-note summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.impl-note p { margin: 0.4rem 0 0.8rem; font-size: 0.9rem; color: var(--text-muted); }
+.impl-note code {
+  font-family: var(--mono); font-size: 0.84em;
+  background: var(--surface-2); padding: 0.05rem 0.3rem; border-radius: 4px;
+}
+
+/* ── Source links ─────────────────────────────────────────────────────── */
+.ref-link {
+  display: inline-block; margin-top: 0.5rem;
+  font-size: 0.78rem; font-weight: 600; color: var(--accent);
+  text-decoration: none; letter-spacing: 0.02em;
+}
+.standards .ref-link { margin: 0 0 0 auto; flex: 0 0 auto; }
+.ref-link:hover { text-decoration: underline; }
+.ref-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
 
 /* ── Reduced motion ───────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

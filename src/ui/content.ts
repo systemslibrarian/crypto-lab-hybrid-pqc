@@ -62,6 +62,12 @@ export function buildTradeoffs(): HTMLElement {
 }
 
 export function buildRealWorld(): HTMLElement {
+  const refLink = (href: string, label: string) =>
+    el('a', { class: 'ref-link', href, target: '_blank', rel: 'noopener', 'aria-label': `${label} (source, opens in new tab)` }, [
+      'source ',
+      el('span', { 'aria-hidden': 'true' }, '↗'),
+    ]);
+
   const deployments = el(
     'div',
     { class: 'deploy-grid' },
@@ -70,6 +76,7 @@ export function buildRealWorld(): HTMLElement {
         el('h4', {}, d.system),
         el('code', { class: 'deploy-scheme' }, d.scheme),
         el('p', {}, d.note),
+        refLink(d.ref, d.system),
       ]),
     ),
   );
@@ -78,7 +85,11 @@ export function buildRealWorld(): HTMLElement {
     'ul',
     { class: 'standards' },
     STANDARDS.map((s) =>
-      el('li', {}, [el('span', { class: 'std-id' }, s.id), el('span', { class: 'std-title' }, s.title)]),
+      el('li', {}, [
+        el('span', { class: 'std-id' }, s.id),
+        el('span', { class: 'std-title' }, s.title),
+        refLink(s.ref, s.id),
+      ]),
     ),
   );
 

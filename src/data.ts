@@ -32,42 +32,69 @@ export interface Deployment {
   system: string;
   scheme: string;
   note: string;
+  /** Authoritative source so every claim here is verifiable. */
+  ref: string;
 }
 
 export const DEPLOYMENTS: Deployment[] = [
   {
     system: 'TLS 1.3 (Chrome, Firefox, Cloudflare, AWS)',
     scheme: 'X25519MLKEM768',
-    note: 'A hybrid key-exchange group (IANA codepoint 0x11EC) now negotiated by default in major browsers and CDNs.',
+    note: 'A hybrid key-exchange group (IANA codepoint 0x11EC) negotiated by default in current browsers and CDNs. Both sides feed ml_kem_ss ‖ x25519_ss straight into the TLS key schedule.',
+    ref: 'https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/',
   },
   {
-    system: 'OpenSSH ≥ 9.0 / 9.9',
-    scheme: 'sntrup761x25519, mlkem768x25519-sha256',
-    note: 'Hybrid KEX is the default for SSH; the ML-KEM variant follows the NIST standard.',
+    system: 'OpenSSH',
+    scheme: 'mlkem768x25519-sha256, sntrup761x25519-sha512',
+    note: 'Post-quantum hybrid KEX has been the SSH default since 9.0 (sntrup761); the ML-KEM hybrid arrived in 9.9 and became the default in 10.0 (2025).',
+    ref: 'https://www.openssh.com/pq.html',
   },
   {
     system: 'Signal',
     scheme: 'PQXDH (X25519 + ML-KEM-1024)',
-    note: 'The initial key agreement of the Signal protocol was upgraded to a hybrid in 2023.',
+    note: 'The Signal protocol’s initial key agreement (X3DH) was upgraded to the hybrid PQXDH and deployed in late 2023.',
+    ref: 'https://signal.org/docs/specifications/pqxdh/',
   },
   {
     system: 'Apple iMessage',
-    scheme: 'PQ3 (hybrid + ongoing PQ ratchet)',
-    note: 'Combines classical ECDH with ML-KEM and re-establishes PQ keys continuously.',
+    scheme: 'PQ3 (ECDH + ML-KEM, PQ ratchet)',
+    note: 'Combines classical ECDH with ML-KEM (Kyber) for the initial key and re-establishes PQ keys continuously. Rolled out in iOS 17.4 (2024).',
+    ref: 'https://security.apple.com/blog/imessage-pq3/',
   },
 ];
 
 export interface Standard {
   id: string;
   title: string;
+  ref: string;
 }
 
 export const STANDARDS: Standard[] = [
-  { id: 'FIPS 203', title: 'ML-KEM (Module-Lattice KEM, the standardized Kyber)' },
-  { id: 'FIPS 204', title: 'ML-DSA (Module-Lattice signatures, the standardized Dilithium)' },
-  { id: 'FIPS 205', title: 'SLH-DSA (stateless hash-based signatures, the standardized SPHINCS+)' },
-  { id: 'NIST SP 800-227', title: 'Recommendations for KEMs, incl. hybrid combiner guidance' },
-  { id: 'IETF draft-ietf-tls-hybrid-design', title: 'Hybrid key exchange in TLS 1.3' },
+  {
+    id: 'FIPS 203',
+    title: 'ML-KEM (Module-Lattice KEM, the standardized Kyber)',
+    ref: 'https://csrc.nist.gov/pubs/fips/203/final',
+  },
+  {
+    id: 'FIPS 204',
+    title: 'ML-DSA (Module-Lattice signatures, the standardized Dilithium)',
+    ref: 'https://csrc.nist.gov/pubs/fips/204/final',
+  },
+  {
+    id: 'FIPS 205',
+    title: 'SLH-DSA (stateless hash-based signatures, the standardized SPHINCS+)',
+    ref: 'https://csrc.nist.gov/pubs/fips/205/final',
+  },
+  {
+    id: 'NIST SP 800-227 (draft)',
+    title: 'Recommendations for Key-Encapsulation Mechanisms',
+    ref: 'https://csrc.nist.gov/pubs/sp/800/227/ipd',
+  },
+  {
+    id: 'IETF draft-ietf-tls-hybrid-design',
+    title: 'Hybrid key exchange in TLS 1.3',
+    ref: 'https://datatracker.ietf.org/doc/draft-ietf-tls-hybrid-design/',
+  },
 ];
 
 /** One qualitative rating cell in the trade-off matrix. */
