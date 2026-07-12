@@ -13,15 +13,19 @@ import {
 } from '../data.ts';
 
 export function buildHero(): HTMLElement {
-  return el('header', { class: 'hero', role: 'group' }, [
-    el('p', { class: 'eyebrow' }, 'Crypto Lab · PQC Migration'),
-    el('h1', {}, 'Hybrid PQC + Classical Migration'),
-    el('p', { class: 'tagline' }, [
-      'Why real systems are pairing ',
-      el('strong', {}, 'classical'),
-      ' and ',
-      el('strong', {}, 'post-quantum'),
-      ' algorithms during the migration — compared side by side, with real X25519, ML-KEM-768, Ed25519, and ML-DSA-65 primitives running in your browser.',
+  return el('header', { class: 'cl-hero' }, [
+    el('div', { class: 'cl-hero-main' }, [
+      el('h1', { class: 'cl-hero-title' }, 'Hybrid PQC'),
+      el('p', { class: 'cl-hero-sub' }, 'X25519 + ML-KEM-768 · Ed25519 + ML-DSA-65 · KEM combiner'),
+      el('p', { class: 'cl-hero-desc' },
+        'Combine a classical and a post-quantum algorithm, then break either half and watch the hybrid session key and signature still hold — with real X25519, ML-KEM-768, Ed25519, and ML-DSA-65 running in your browser.',
+      ),
+    ]),
+    el('aside', { class: 'cl-hero-why', 'aria-label': 'Why it matters' }, [
+      el('span', { class: 'cl-hero-why-label' }, 'WHY IT MATTERS'),
+      el('p', { class: 'cl-hero-why-text' },
+        'A “harvest now, decrypt later” adversary records traffic today to break it once quantum computers arrive. Pairing the two algorithms keeps a connection safe as long as one half stands, so migration never regresses security.',
+      ),
     ]),
   ]);
 }
