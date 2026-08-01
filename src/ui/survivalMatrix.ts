@@ -56,7 +56,7 @@ export function buildSurvivalMatrix(store: Store): HTMLElement {
 
   return el('figure', { class: 'survival' }, [
     el('figcaption', {}, 'Who survives which break'),
-    el('div', { class: 'table-scroll' }, [
+    el('div', { class: 'table-scroll', tabindex: '0' }, [
       el('table', { class: 'survival-table' }, [
         el(
           'thead',

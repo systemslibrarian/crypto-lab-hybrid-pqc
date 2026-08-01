@@ -42,7 +42,9 @@ export function dotMeter(level: 1 | 2 | 3, label: string): HTMLElement {
 
 /** Monospace, horizontally-scrollable byte string with a copy button. */
 export function hexBox(label: string, hex: string): HTMLElement {
-  const code = el('code', { class: 'hex' }, hex);
+  // The byte string scrolls sideways rather than wrapping, so it must be
+  // reachable by keyboard as well as by pointer (WCAG 2.1.1).
+  const code = el('code', { class: 'hex', tabindex: '0', role: 'group', 'aria-label': label }, hex);
   const copy = el(
     'button',
     {

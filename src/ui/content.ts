@@ -61,7 +61,7 @@ export function buildTradeoffs(): HTMLElement {
   return el('section', { class: 'section', 'aria-labelledby': 'sec-trade' }, [
     el('h2', { id: 'sec-trade' }, '⚖️ Trade-offs at a Glance'),
     el('p', { class: 'lede' }, 'More dots = better on that axis. Hybrid wins on security by giving up bandwidth and simplicity — the bet that the safety margin is worth the cost during the transition.'),
-    el('div', { class: 'table-scroll' }, [
+    el('div', { class: 'table-scroll', tabindex: '0' }, [
       el('table', { class: 'tradeoff' }, [el('thead', {}, head), el('tbody', {}, rows)]),
     ]),
   ]);
@@ -142,7 +142,7 @@ export function buildProtocolFidelity(): HTMLElement {
   return el('section', { class: 'section', 'aria-labelledby': 'sec-fidelity' }, [
     el('h2', { id: 'sec-fidelity' }, '🔬 Lab vs. Real Protocols'),
     el('p', { class: 'lede' }, 'This is a teaching model, not a wire format. Here is exactly how its combiner differs from the constructions deployed in production — all of which share the property that both secrets are required.'),
-    el('div', { class: 'table-scroll' }, [
+    el('div', { class: 'table-scroll', tabindex: '0' }, [
       el('table', { class: 'fidelity' }, [el('thead', {}, head), el('tbody', {}, rows)]),
     ]),
   ]);

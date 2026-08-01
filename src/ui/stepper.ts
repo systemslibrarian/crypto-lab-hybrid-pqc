@@ -39,7 +39,10 @@ function highlight(id: string): void {
   const sec = document.getElementById(id)?.closest('section');
   if (!sec) return;
   sec.classList.add('cl-highlight');
-  (sec as HTMLElement).scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  // Respect prefers-reduced-motion: CSS can flatten the pulse but not a
+  // JS-driven smooth scroll, so pick the behaviour here (WCAG 2.3.3).
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  (sec as HTMLElement).scrollIntoView?.({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
   window.setTimeout(() => sec.classList.remove('cl-highlight'), 2200);
 }
 

@@ -71,11 +71,13 @@ export function byteBars(opts: { caption: string; note: string; rows: ByteRow[] 
     for (const { span, total } of totalSpans) span.textContent = fmt(total);
     (['B', 'KB', 'x'] as Unit[]).forEach((k) => unitBtns[k].setAttribute('aria-pressed', String(k === u)));
   };
-  const mkBtn = (u: Unit, text: string) => {
+  const mkBtn = (u: Unit, text: string, label?: string) => {
     const b = el('button', {
       class: 'unit-btn',
       type: 'button',
       'aria-pressed': String(u === 'B'),
+      // Glyph-only buttons ('×') need a spoken name of their own.
+      'aria-label': label,
       onclick: () => setUnit(u),
     }, text);
     unitBtns[u] = b;
@@ -83,8 +85,8 @@ export function byteBars(opts: { caption: string; note: string; rows: ByteRow[] 
   };
   const toggle = el('div', { class: 'unit-toggle', role: 'group', 'aria-label': 'Size units' }, [
     mkBtn('B', 'bytes'),
-    mkBtn('KB', 'KB'),
-    mkBtn('x', '×'),
+    mkBtn('KB', 'KB', 'kilobytes'),
+    mkBtn('x', '×', 'multiples of classical'),
   ]);
 
   return el('figure', { class: 'bytefig' }, [
