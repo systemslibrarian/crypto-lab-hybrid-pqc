@@ -9,8 +9,8 @@ import { byteBars } from './viz.ts';
 import { kemAnatomy } from './anatomy.ts';
 import { establishKem, establishAllKem, rebenchKemCol } from './actions.ts';
 import { KEMS, classicalKem, pqKem } from '../crypto/kem.ts';
-import { attackerRecoversKey } from '../crypto/session.ts';
-import { status, type SecurityStatus } from '../crypto/compromise.ts';
+import { attemptKeyRecovery, kemStatus } from '../crypto/attack.ts';
+import { type SecurityStatus } from '../crypto/compromise.ts';
 import { formatBytes, formatMs, formatRange, toHex, type Timing } from '../crypto/metrics.ts';
 import { APPROACHES, type Approach } from '../crypto/types.ts';
 import type { Store } from './store.ts';
@@ -56,7 +56,9 @@ function buildColumn(store: Store, approach: Approach): HTMLElement {
   function paint() {
     clear(body);
     const sess = store.state.kem[approach];
-    const st = status(approach, store.state.threats);
+    // Run the attack first — the badge is its result, not the switches'.
+    const recovery = sess ? attemptKeyRecovery(sess, store.state.threats) : null;
+    const st: SecurityStatus = recovery ? kemStatus(recovery, store.state.threats) : 'secure';
     card.setAttribute('data-status', sess ? st : 'idle');
 
     // Sizes are known without establishing — show them for instant comparison.
@@ -68,7 +70,7 @@ function buildColumn(store: Store, approach: Approach): HTMLElement {
       ]),
     );
 
-    if (!sess) {
+    if (!sess || !recovery) {
       body.append(
         el('button', { class: 'btn establish', type: 'button', onclick: () => establishKem(store, approach) }, 'Establish session'),
       );
@@ -98,14 +100,24 @@ function buildColumn(store: Store, approach: Approach): HTMLElement {
         el('span', { 'aria-hidden': 'true' }, meta.icon + ' '),
         el('strong', {}, meta.label),
       ]),
-      kemAnatomy(approach, store.state.threats),
+      kemAnatomy(approach, recovery),
     ]);
 
-    const recovered = attackerRecoversKey(sess, store.state.threats);
-    if (recovered) {
+    // The attacker always produces bytes; what decides the verdict is whether
+    // those bytes matched. Show both cases so the failure is visible too.
+    if (recovery.matches) {
       statusEl.append(
-        el('p', { class: 'attacker' }, 'Attacker reconstructed the session key:'),
-        hexBox('Recovered', toHex(recovered)),
+        el('p', { class: 'attacker' }, 'Attacker reconstructed the session key — these bytes matched:'),
+        hexBox('Recovered', toHex(recovery.candidate)),
+      );
+    } else if (recovery.held.length > 0) {
+      statusEl.append(
+        el(
+          'p',
+          { class: 'attacker attacker-failed' },
+          `Attacker ran the combiner with the ${recovery.held.join(' + ')} secret they hold and a guess for the rest. The bytes they got do not match the session key:`,
+        ),
+        hexBox('Attacker’s key', toHex(recovery.candidate)),
       );
     }
     body.append(statusEl);

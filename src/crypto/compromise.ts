@@ -29,22 +29,26 @@ function familyBroken(family: 'classical' | 'pq', s: CompromiseState): boolean {
   return family === 'classical' ? s.classicalBroken : s.pqBroken;
 }
 
-/** Compromised iff every family the approach relies on is broken. */
+/**
+ * The model's *prediction*: compromised iff every family the approach relies on
+ * is broken.
+ *
+ * This is deliberately no longer what the page reports. The badges, the
+ * attacker panels and the survival matrix all come from attack.ts, which
+ * actually runs the combiner and the verifier; this function survives as the
+ * claim those runs are checked against (see compromise.test.ts). If the theory
+ * and the runs ever disagree, the tests fail rather than the page lying.
+ */
 export function isCompromised(approach: Approach, s: CompromiseState): boolean {
   return RELIES_ON[approach].every((f) => familyBroken(f, s));
 }
 
-export type SecurityStatus = 'secure' | 'hedge-holding' | 'broken';
-
 /**
- * - 'broken'        : the attacker can recover the key / forge the signature.
- * - 'hedge-holding' : at least one half is broken, but the approach still holds
- *                     because another, unbroken half is doing the work. (Only
- *                     hybrid can ever be here.)
- * - 'secure'        : nothing it relies on is broken.
+ * - 'broken'        : the attacker recovered the key / the verifier accepted a
+ *                     forgery — both established by running them.
+ * - 'hedge-holding' : an algorithm the approach relies on has fallen, but the
+ *                     attack still failed because another half did the work.
+ *                     (Only hybrid can ever be here.)
+ * - 'secure'        : nothing it relies on is broken, and the attack failed.
  */
-export function status(approach: Approach, s: CompromiseState): SecurityStatus {
-  if (isCompromised(approach, s)) return 'broken';
-  const anyBroken = RELIES_ON[approach].some((f) => familyBroken(f, s));
-  return anyBroken ? 'hedge-holding' : 'secure';
-}
+export type SecurityStatus = 'secure' | 'hedge-holding' | 'broken';

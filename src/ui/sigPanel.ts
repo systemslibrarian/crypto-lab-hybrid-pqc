@@ -9,8 +9,8 @@ import { sigAnatomy } from './anatomy.ts';
 import { signOne, signAll, rebenchSigCol, setMessage } from './actions.ts';
 import { MAX_MSG } from './urlState.ts';
 import { SIGS, classicalSig, pqSig } from '../crypto/sign.ts';
-import { forgeryAccepted } from '../crypto/session.ts';
-import { status, type SecurityStatus } from '../crypto/compromise.ts';
+import { attemptForgery, sigStatus } from '../crypto/attack.ts';
+import { type SecurityStatus } from '../crypto/compromise.ts';
 import { formatBytes, formatMs, formatRange, toHex, type Timing } from '../crypto/metrics.ts';
 import { APPROACHES, type Approach } from '../crypto/types.ts';
 import type { Store } from './store.ts';
@@ -56,7 +56,9 @@ function buildColumn(store: Store, approach: Approach): HTMLElement {
   function paint() {
     clear(body);
     const run = store.state.sig[approach];
-    const st = status(approach, store.state.threats);
+    // Forge first, verify, then label. The badge is the verifier's answer.
+    const forgery = run ? attemptForgery(run, store.state.threats) : null;
+    const st: SecurityStatus = forgery ? sigStatus(forgery, store.state.threats) : 'secure';
     card.setAttribute('data-status', run ? st : 'idle');
 
     body.append(
@@ -66,7 +68,7 @@ function buildColumn(store: Store, approach: Approach): HTMLElement {
       ]),
     );
 
-    if (!run) {
+    if (!run || !forgery) {
       body.append(
         el('button', { class: 'btn establish', type: 'button', onclick: () => signOne(store, approach) }, 'Sign message'),
       );
@@ -96,11 +98,26 @@ function buildColumn(store: Store, approach: Approach): HTMLElement {
         el('span', { 'aria-hidden': 'true' }, meta.icon + ' '),
         el('strong', {}, meta.label),
       ]),
-      sigAnatomy(approach, store.state.threats),
+      sigAnatomy(approach, forgery),
     ]);
-    if (forgeryAccepted(approach, store.state.threats)) {
+    // A forgery is produced on every repaint. Report what the verifier said
+    // about it, in both directions, and show the message it was made for.
+    const forgedText = new TextDecoder().decode(forgery.message);
+    if (forgery.accepted) {
       statusEl.append(
-        el('p', { class: 'attacker' }, 'Every algorithm this verifier checks is broken — a forged signature passes.'),
+        el('p', { class: 'attacker' }, 'The verifier ACCEPTED a forged signature over a message this key never signed:'),
+        el('p', { class: 'forged-msg' }, `“${forgedText}”`),
+        hexBox('Forged signature', toHex(forgery.signature, 24)),
+      );
+    } else {
+      statusEl.append(
+        el(
+          'p',
+          { class: 'attacker attacker-failed' },
+          'The attacker submitted a forged signature over a message this key never signed. The verifier rejected it:',
+        ),
+        el('p', { class: 'forged-msg' }, `“${forgedText}”`),
+        hexBox('Rejected forgery', toHex(forgery.signature, 24)),
       );
     }
     body.append(statusEl);

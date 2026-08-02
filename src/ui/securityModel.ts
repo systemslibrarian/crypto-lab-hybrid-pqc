@@ -7,7 +7,15 @@ import { el, clear } from './dom.ts';
 import { setThreat, resetDemo } from './actions.ts';
 import { buildSurvivalMatrix } from './survivalMatrix.ts';
 import { shareUrl } from './urlState.ts';
+import { verdictsFor } from '../crypto/proofSet.ts';
+import { APPROACHES, type Approach } from '../crypto/types.ts';
 import type { Store } from './store.ts';
+
+const APPROACH_NAME: Record<Approach, string> = {
+  classical: 'classical-only',
+  pq: 'PQ-only',
+  hybrid: 'hybrid',
+};
 
 export function buildSecurityModel(store: Store): HTMLElement {
   const summary = el('p', { class: 'threat-summary', role: 'status', 'aria-live': 'polite' });
@@ -39,28 +47,38 @@ export function buildSecurityModel(store: Store): HTMLElement {
     inputs.classicalBroken.checked = store.state.threats.classicalBroken;
     inputs.pqBroken.checked = store.state.threats.pqBroken;
 
-    const { classicalBroken, pqBroken } = store.state.threats;
+    const { classicalBroken } = store.state.threats;
     clear(summary);
+
+    // What fell and what held is read off the runs in the survival table: each
+    // verdict there is a real key-recovery attempt and a real forgery.
+    const verdicts = verdictsFor(store.state.threats);
+    const fell = APPROACHES.filter((a) => verdicts[a].overall === 'broken');
+    const held = APPROACHES.filter((a) => verdicts[a].overall === 'hedge-holding');
+    const names = (list: Approach[]) => list.map((a) => APPROACH_NAME[a]).join(' and ');
+
     let icon: string, cls: string, text: string;
-    if (classicalBroken && pqBroken) {
-      icon = '⛔';
-      cls = 'broken';
-      text =
-        'Both families are broken. Nothing survives — hybrid included. The hedge only buys time against ONE break at a time, which is the realistic threat.';
-    } else if (classicalBroken) {
-      icon = '🛡️';
-      cls = 'hedge';
-      text =
-        'A quantum computer broke X25519 / Ed25519. Classical-only is gone. Hybrid HOLDS — its ML-KEM / ML-DSA half still requires a lattice break.';
-    } else if (pqBroken) {
-      icon = '🛡️';
-      cls = 'hedge';
-      text =
-        'A lattice break defeated ML-KEM / ML-DSA. Pure post-quantum is gone. Hybrid HOLDS — its classical half still requires breaking discrete log.';
-    } else {
+    if (fell.length === 0 && held.length === 0) {
       icon = '✅';
       cls = 'secure';
-      text = 'No algorithm is broken. All three approaches are secure today. Flip a switch to simulate a break.';
+      text =
+        'No algorithm is broken. The attacker ran anyway: no reconstructed key matched, and every forged signature was rejected. Flip a switch to simulate a break.';
+    } else if (fell.length === APPROACHES.length) {
+      icon = '⛔';
+      cls = 'broken';
+      text = `Both families are broken. The attacker reconstructed the session key and the verifier accepted a forgery for all three approaches — hybrid included. The hedge only buys time against ONE break at a time, which is the realistic threat.`;
+    } else {
+      const cause = classicalBroken
+        ? 'A quantum computer broke X25519 / Ed25519'
+        : 'A lattice break defeated ML-KEM / ML-DSA';
+      const survivor = classicalBroken
+        ? 'its ML-KEM / ML-DSA half still requires a lattice break'
+        : 'its classical half still requires breaking discrete log';
+      icon = '🛡️';
+      cls = 'hedge';
+      text = `${cause}. The attack succeeded against ${names(fell) || 'nothing'} — key recovered, forgery accepted. It was run against ${names(
+        held,
+      )} too and failed: the reconstructed key did not match and the verifier rejected the forgery, because ${survivor}.`;
     }
     summary.className = `threat-summary ${cls}`;
     summary.append(el('span', { class: 'ts-icon', 'aria-hidden': 'true' }, icon), el('span', {}, text));

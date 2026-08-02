@@ -1,12 +1,15 @@
 // Component-level "why" for each column. Instead of only asserting the hybrid
-// holds, this shows the parts: which underlying secret/verification the attacker
-// has, and how the combiner / AND-verify turns "one survivor" into safety. The
-// data is the same model the crypto code uses (compromise.ts), surfaced so the
-// claim reads as proven, not stated.
+// holds, this shows the parts: which underlying secret the attacker actually
+// held, and what happened when the combiner / AND-verify ran with it.
+//
+// Every row is read off a completed attack (attack.ts): the gate rows report
+// whether the reconstructed key matched and whether the verifier accepted the
+// forgery, and the per-half signature rows report what each half's verifier
+// said about the bytes the attacker submitted.
 
 import { el } from './dom.ts';
 import type { Approach } from '../crypto/types.ts';
-import type { CompromiseState } from '../crypto/compromise.ts';
+import type { KeyRecovery, Forgery } from '../crypto/attack.ts';
 
 interface Row {
   label: string;
@@ -33,51 +36,56 @@ function list(caption: string, rows: Row[]): HTMLElement {
   ]);
 }
 
-/** Key-exchange anatomy: component shared secrets + the combiner gate. */
-export function kemAnatomy(approach: Approach, t: CompromiseState): HTMLElement {
-  if (approach === 'classical') {
-    return list('Attacker’s view', [
-      { label: 'X25519 shared secret', ok: !t.classicalBroken, okText: 'secret', badText: 'recovered' },
-    ]);
+const SECRET_LABEL: Record<'classical' | 'pq', string> = {
+  classical: 'X25519 shared secret',
+  pq: 'ML-KEM-768 shared secret',
+};
+
+/** Key-exchange anatomy: what the attacker held, and what the combiner produced. */
+export function kemAnatomy(approach: Approach, r: KeyRecovery): HTMLElement {
+  const secretRows: Row[] = [];
+  for (const family of ['classical', 'pq'] as const) {
+    if (!r.held.includes(family) && !r.guessed.includes(family)) continue;
+    secretRows.push({
+      label: SECRET_LABEL[family],
+      ok: !r.held.includes(family),
+      okText: 'secret — attacker guessed',
+      badText: 'recovered',
+    });
   }
-  if (approach === 'pq') {
-    return list('Attacker’s view', [
-      { label: 'ML-KEM-768 shared secret', ok: !t.pqBroken, okText: 'secret', badText: 'recovered' },
-    ]);
-  }
+  if (approach !== 'hybrid') return list('Attacker’s view', secretRows);
+
   return list('Attacker’s view', [
-    { label: 'X25519 shared secret', ok: !t.classicalBroken, okText: 'secret', badText: 'recovered' },
-    { label: 'ML-KEM-768 shared secret', ok: !t.pqBroken, okText: 'secret', badText: 'recovered' },
+    ...secretRows,
     {
       label: 'Combiner output (needs both)',
-      ok: !(t.classicalBroken && t.pqBroken),
-      okText: 'unrecoverable',
-      badText: 'recovered',
+      // Measured: did the bytes the attacker derived equal the session key?
+      ok: !r.matches,
+      okText: 'did not match the session key',
+      badText: 'matched the session key',
       gate: true,
     },
   ]);
 }
 
-/** Signature anatomy: per-scheme verification + the hybrid AND gate. */
-export function sigAnatomy(approach: Approach, t: CompromiseState): HTMLElement {
-  if (approach === 'classical') {
-    return list('Verifier checklist', [
-      { label: 'Ed25519 signature', ok: !t.classicalBroken, okText: 'unforgeable', badText: 'forgeable' },
-    ]);
-  }
-  if (approach === 'pq') {
-    return list('Verifier checklist', [
-      { label: 'ML-DSA-65 signature', ok: !t.pqBroken, okText: 'unforgeable', badText: 'forgeable' },
-    ]);
-  }
+/** Signature anatomy: what each half's verifier said about the forged bytes. */
+export function sigAnatomy(approach: Approach, f: Forgery): HTMLElement {
+  const halfRows: Row[] = f.halves.map((h) => ({
+    label: `${h.algo} signature`,
+    // Measured: this half's verifier ran on the attacker's bytes and answered.
+    ok: !h.verified,
+    okText: 'forgery rejected',
+    badText: 'forgery verified',
+  }));
+  if (approach !== 'hybrid') return list('Verifier checklist', halfRows);
+
   return list('Verifier checklist', [
-    { label: 'Ed25519 signature', ok: !t.classicalBroken, okText: 'unforgeable', badText: 'forgeable' },
-    { label: 'ML-DSA-65 signature', ok: !t.pqBroken, okText: 'unforgeable', badText: 'forgeable' },
+    ...halfRows,
     {
       label: 'Hybrid verifier (requires both)',
-      ok: !(t.classicalBroken && t.pqBroken),
-      okText: 'rejects forgeries',
-      badText: 'accepts forgery',
+      ok: !f.accepted,
+      okText: 'rejected the forgery',
+      badText: 'accepted the forgery',
       gate: true,
     },
   ]);

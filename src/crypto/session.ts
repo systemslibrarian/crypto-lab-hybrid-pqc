@@ -5,14 +5,14 @@
 // What is real: every key, ciphertext, signature, shared secret, and timing.
 // What is simulated: the *event* "algorithm family F has been broken". We model
 // a break by granting the attacker the genuine component secret for F (you
-// cannot actually solve X25519 in a browser). The combiner / AND-verify logic
-// the attacker then runs is the real thing, so "can the attacker reconstruct
-// the session key?" is answered by real cryptographic code, not a hand-wave.
+// cannot actually solve X25519 in a browser). What the attacker then does with
+// it is real: attack.ts runs the combiner and the verifier for real, so both
+// "can they reconstruct the session key?" and "does a forgery verify?" are
+// answered by running them, not by consulting the switches.
 
-import { KEMS, classicalKem, pqKem, combineKem, splitHybrid, type KemSizes } from './kem.ts';
+import { KEMS, classicalKem, pqKem, splitHybrid, type KemSizes } from './kem.ts';
 import { SIGS, type SigSizes } from './sign.ts';
 import { benchDist, bytesEqual, type Timing } from './metrics.ts';
-import { isCompromised, type CompromiseState } from './compromise.ts';
 import type { Approach } from './types.ts';
 
 export interface KemTimings {
@@ -40,8 +40,8 @@ export interface KemSession {
   /** Sender and receiver derived the same key (must be true for a real run). */
   match: boolean;
   /**
-   * Genuine per-family component secrets, used ONLY by attackerRecoversKey to
-   * simulate a break. For single-algorithm approaches this is just the session
+   * Genuine per-family component secrets, handed to the attacker in attack.ts
+   * when that family is marked broken. For single-algorithm approaches this is just the session
    * key; for hybrid it is { classical: ssX, pq: ssMlkem }.
    */
   components: { classical?: Uint8Array; pq?: Uint8Array };
@@ -56,7 +56,21 @@ function benchKem(approach: Approach, publicKey: Uint8Array, secretKey: Uint8Arr
   };
 }
 
-export function runKem(approach: Approach): KemSession {
+// Timing placeholder for runs whose purpose is the attack, not the benchmark
+// (the survival matrix). Nothing displays these.
+const NO_TIMING: Timing = { median: 0, min: 0, max: 0, runs: 0 };
+const NO_KEM_TIMINGS: KemTimings = {
+  keygen: NO_TIMING,
+  encapsulate: NO_TIMING,
+  decapsulate: NO_TIMING,
+};
+const NO_SIG_TIMINGS: SigTimings = { keygen: NO_TIMING, sign: NO_TIMING, verify: NO_TIMING };
+
+/**
+ * @param bench when false, skip the micro-benchmarks. The key material and the
+ * transcript are identical either way — only the timing figures are omitted.
+ */
+export function runKem(approach: Approach, bench = true): KemSession {
   const kem = KEMS[approach];
 
   const kp = kem.keygen();
@@ -84,7 +98,7 @@ export function runKem(approach: Approach): KemSession {
     approach,
     label: kem.label,
     sizes: kem.sizes,
-    timings: benchKem(approach, kp.publicKey, kp.secretKey, enc.ciphertext),
+    timings: bench ? benchKem(approach, kp.publicKey, kp.secretKey, enc.ciphertext) : NO_KEM_TIMINGS,
     publicKey: kp.publicKey,
     secretKey: kp.secretKey,
     ciphertext: enc.ciphertext,
@@ -100,20 +114,10 @@ export function rebenchKem(s: KemSession): KemSession {
   return { ...s, timings: benchKem(s.approach, s.publicKey, s.secretKey, s.ciphertext) };
 }
 
-/**
- * The session key the attacker can reconstruct under the given threat state, or
- * null if they cannot. For hybrid, recovery needs BOTH component secrets, so a
- * single break yields null — that is the hedge, demonstrated by real code.
- */
-export function attackerRecoversKey(s: KemSession, state: CompromiseState): Uint8Array | null {
-  if (s.approach === 'hybrid') {
-    if (!(state.classicalBroken && state.pqBroken)) return null;
-    const { ctX, ctMlkem } = splitHybrid(s.ciphertext);
-    return combineKem(s.components.classical!, s.components.pq!, ctX, ctMlkem);
-  }
-  if (s.approach === 'classical') return state.classicalBroken ? s.components.classical! : null;
-  return state.pqBroken ? s.components.pq! : null;
-}
+// The attacker lives in attack.ts: attemptKeyRecovery() runs the real combiner
+// over whatever secrets the break handed over and compares the bytes it
+// produced against `senderKey`, and attemptForgery() really signs and really
+// verifies. Nothing in this file decides whether an attack worked.
 
 // ---------------------------------------------------------------------------
 // Signature run
@@ -153,7 +157,8 @@ function benchSig(
   };
 }
 
-export function runSig(approach: Approach, message: Uint8Array): SigRun {
+/** @param bench see runKem. */
+export function runSig(approach: Approach, message: Uint8Array, bench = true): SigRun {
   const scheme = SIGS[approach];
   const kp = scheme.keygen();
   const signature = scheme.sign(kp.secretKey, message);
@@ -163,7 +168,7 @@ export function runSig(approach: Approach, message: Uint8Array): SigRun {
     approach,
     label: scheme.label,
     sizes: scheme.sizes,
-    timings: benchSig(approach, kp.publicKey, kp.secretKey, message, signature),
+    timings: bench ? benchSig(approach, kp.publicKey, kp.secretKey, message, signature) : NO_SIG_TIMINGS,
     message,
     publicKey: kp.publicKey,
     secretKey: kp.secretKey,
@@ -177,11 +182,6 @@ export function rebenchSig(s: SigRun): SigRun {
   return { ...s, timings: benchSig(s.approach, s.publicKey, s.secretKey, s.message, s.signature) };
 }
 
-/**
- * Would a forged signature be accepted under the given threat state? A forger
- * must defeat every algorithm the verifier checks. For hybrid the verifier ANDs
- * both halves, so forgery is accepted only when both families are broken.
- */
-export function forgeryAccepted(approach: Approach, state: CompromiseState): boolean {
-  return isCompromised(approach, state);
-}
+// Whether a forgery is accepted is answered by attack.ts: it builds the forged
+// signature with the keys the attacker actually holds and runs the honest
+// verifier on it.

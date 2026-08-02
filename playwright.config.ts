@@ -5,6 +5,10 @@ import { defineConfig } from '@playwright/test';
  * `vite preview`, so what passes here is what actually ships to Pages.
  * Run `npm run build` first (CI does).
  */
+// Overridable so a busy port on a dev box does not block the gate.
+const PORT = process.env.PREVIEW_PORT ?? '4220';
+const BASE = `http://localhost:${PORT}/crypto-lab-hybrid-pqc/`;
+
 export default defineConfig({
   testDir: 'e2e',
   fullyParallel: true,
@@ -12,12 +16,12 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'list' : [['list'], ['html', { open: 'never' }]],
   webServer: {
-    command: 'npm run preview -- --port 4220 --strictPort',
-    url: 'http://localhost:4220/crypto-lab-hybrid-pqc/',
+    command: `npm run preview -- --port ${PORT} --strictPort`,
+    url: BASE,
     reuseExistingServer: !process.env.CI,
   },
   use: {
-    baseURL: 'http://localhost:4220/crypto-lab-hybrid-pqc/',
+    baseURL: BASE,
     colorScheme: 'dark',
   },
   projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],

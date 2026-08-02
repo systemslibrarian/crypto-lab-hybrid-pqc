@@ -241,6 +241,10 @@ body {
 .status-broken .status-badge strong { color: var(--bad); }
 .attacker { font-size: 0.82rem; color: var(--bad); margin: 0.5rem 0 0.3rem; font-weight: 600; }
 .attacker.safe { color: var(--warn); }
+/* The attack ran and failed — same panel, but this is not bad news. */
+.attacker.attacker-failed { color: var(--ok); font-weight: 500; }
+.forged-msg { font-size: 0.8rem; color: var(--text-muted); margin: 0 0 0.4rem; font-style: italic; overflow-wrap: anywhere; }
+.survival-note { font-size: 0.78rem; color: var(--text-muted); margin: 0.6rem 0 0; }
 
 /* ── Security model switches ──────────────────────────────────────────── */
 .switches { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.2rem; }
