@@ -1,5 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { NARROW, boot, scan, settle } from './gate';
+import {
+  NARROW,
+  boot,
+  expectBaselineNotStale,
+  expectNoNewNonTextFailures,
+  scan,
+  settle,
+} from './gate';
 
 /**
  * WCAG regression gate.
@@ -160,6 +167,53 @@ for (const theme of THEMES) {
     });
   }
 }
+
+/**
+ * The non-text baseline's third rule, which had never run.
+ *
+ * `nontext-baseline.ts` claims three: a finding not listed fails, a listed
+ * finding that got WORSE fails, and a listed finding that has been FIXED fails
+ * until its entry is deleted. The first two live in
+ * `expectNoNewNonTextFailures` and fire from every `scan` above. The third is
+ * `expectBaselineNotStale`, which was exported and never imported — so the
+ * baseline could only ever grow.
+ *
+ * It gets its own test, driving the states itself, rather than a call appended
+ * to the last state test. The scans above are one test per state per theme, so
+ * none of them sees the whole baseline. Leaning on `nonTextSeen` accumulating
+ * across them would make the verdict depend on how Playwright distributed the
+ * tests — at `--workers=1` they share one module instance and the last would
+ * see the union, at the config's default parallelism each gets its own and
+ * would see almost nothing. An oracle whose answer changes with the worker
+ * count is not an oracle, so this one depends on nothing outside itself.
+ *
+ * Dark alone, and measured rather than assumed: captured through the gate's own
+ * path, the six states at both viewports yield all eleven baselined findings in
+ * dark and only ten in light, because `button.btn.primary` clears 3:1 against
+ * the light surface and fails against the dark one. Running it in light would
+ * report that entry as stale on every run.
+ *
+ * It calls `expectNoNewNonTextFailures` rather than the whole of `scan`,
+ * because that is the function that populates `nonTextSeen`; re-running axe,
+ * the contrast walk and the reflow checks over states already scanned above
+ * would multiply this file's cost to assert nothing new.
+ */
+test('the non-text baseline has no stale entries', async ({ page }) => {
+  test.setTimeout(180_000);
+  // One page walks every state, so the desktop width has to be restored by
+  // hand — the scans above get a fresh page per test and never need to.
+  const WIDE = page.viewportSize() ?? { width: 1280, height: 720 };
+  for (const state of STATES) {
+    await boot(page, 'dark');
+    await state.drive(page);
+    await expectNoNewNonTextFailures(page, `stale sweep / ${state.label} / ${WIDE.width}px`);
+    await page.setViewportSize(NARROW);
+    await settle(page);
+    await expectNoNewNonTextFailures(page, `stale sweep / ${state.label} / ${NARROW.width}px`);
+    await page.setViewportSize(WIDE);
+  }
+  expectBaselineNotStale();
+});
 
 /**
  * WCAG 2.1.1 (Keyboard), asserted end to end rather than per-scan.
