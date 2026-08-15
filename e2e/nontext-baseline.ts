@@ -26,6 +26,6 @@ export const NONTEXT_BASELINE: Record<
   "control-boundary|button.btn.reset": { ratio: 1.6, required: 3.0, unverified: false },
   "control-boundary|button.btn.tiny": { ratio: 1.6, required: 3.0, unverified: false },
   "control-boundary|button.copy-btn": { ratio: 1.51, required: 3.0, unverified: false },
-  "control-boundary|button.unit-btn": { ratio: 1.08, required: 3.0, unverified: false },
+  "control-boundary|button.unit-btn": { ratio: 1.29, required: 3.0, unverified: false },
   "control-boundary|textarea#sig-message.msg-input": { ratio: 1.6, required: 3.0, unverified: false }
 };
