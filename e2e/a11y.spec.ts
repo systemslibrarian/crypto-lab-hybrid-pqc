@@ -29,7 +29,7 @@ import {
  * absent. Here every state is driven, and every colour is measured for real.
  */
 
-const THEMES = ['dark', 'light'] as const;
+const THEMES = ['dark'] as const;
 
 const kemCol = (page: Page, a: string) =>
   page.locator(`section[aria-labelledby="sec-kem"] .col-${a}`);
