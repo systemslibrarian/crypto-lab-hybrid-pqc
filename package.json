@@ -16,7 +16,7 @@
   "dependencies": {
     "@noble/curves": "^1.8.1",
     "@noble/hashes": "^1.7.1",
-    "@noble/post-quantum": "^0.4.1"
+    "@noble/post-quantum": "^0.7.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
