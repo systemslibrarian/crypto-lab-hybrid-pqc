@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@noble/curves": "^1.8.1",
-    "@noble/hashes": "^1.7.1",
+    "@noble/hashes": "^2.3.0",
     "@noble/post-quantum": "^0.4.1"
   },
   "devDependencies": {
