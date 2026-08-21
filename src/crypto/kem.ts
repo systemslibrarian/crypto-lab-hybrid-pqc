@@ -14,7 +14,7 @@
 // cannot actually solve X25519 in a browser) — see compromise.ts.
 
 import { x25519 } from '@noble/curves/ed25519';
-import { ml_kem768 } from '@noble/post-quantum/ml-kem';
+import { ml_kem768 } from '@noble/post-quantum/ml-kem.js';
 import { hkdf } from '@noble/hashes/hkdf';
 import { sha256 } from '@noble/hashes/sha256';
 import { concatBytes, randomBytes, utf8ToBytes } from '@noble/hashes/utils';
