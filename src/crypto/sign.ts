@@ -11,7 +11,7 @@
 // algorithm being broken is simulated (compromise.ts).
 
 import { ed25519 } from '@noble/curves/ed25519';
-import { ml_dsa65 } from '@noble/post-quantum/ml-dsa';
+import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
 import { concatBytes, randomBytes } from '@noble/hashes/utils';
 import type { Approach, AlgoSpec } from './types.ts';
 import type { KeyPair } from './kem.ts';
@@ -81,12 +81,17 @@ export const pqSig: SigScheme = {
     const k = ml_dsa65.keygen(randomBytes(32));
     return { publicKey: k.publicKey, secretKey: k.secretKey };
   },
+  // @noble/post-quantum >= 0.5 aligned ML-DSA with the noble-curves argument
+  // order: sign(msg, secretKey) and verify(sig, msg, publicKey). Both arguments
+  // are Uint8Array, so the compiler cannot catch a stale call — only the
+  // library's own length check does, at runtime. Our SigScheme interface keeps
+  // its own (secretKey, message) order, so the swap happens here.
   sign(secretKey, message) {
-    return ml_dsa65.sign(secretKey, message);
+    return ml_dsa65.sign(message, secretKey);
   },
   verify(publicKey, message, signature) {
     try {
-      return ml_dsa65.verify(publicKey, message, signature);
+      return ml_dsa65.verify(signature, message, publicKey);
     } catch {
       return false;
     }
