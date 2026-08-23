@@ -10,9 +10,9 @@
 // All signing/verification is real. As with the KEMs, only the *event* of an
 // algorithm being broken is simulated (compromise.ts).
 
-import { ed25519 } from '@noble/curves/ed25519';
+import { ed25519 } from '@noble/curves/ed25519.js';
 import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
-import { concatBytes, randomBytes } from '@noble/hashes/utils';
+import { concatBytes, randomBytes } from '@noble/hashes/utils.js';
 import type { Approach, AlgoSpec } from './types.ts';
 import type { KeyPair } from './kem.ts';
 

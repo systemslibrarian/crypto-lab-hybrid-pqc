@@ -12,7 +12,7 @@ import { computeSurvivalTable, THREAT_ROWS } from './proofSet.ts';
 import { SIGS } from './sign.ts';
 import { bytesEqual } from './metrics.ts';
 import { APPROACHES } from './types.ts';
-import { utf8ToBytes } from '@noble/hashes/utils';
+import { utf8ToBytes } from '@noble/hashes/utils.js';
 
 const NONE: CompromiseState = { classicalBroken: false, pqBroken: false };
 const CLASSICAL: CompromiseState = { classicalBroken: true, pqBroken: false };

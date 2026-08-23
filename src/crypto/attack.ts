@@ -16,7 +16,7 @@
 // So "key recovered" means the bytes matched, and "forgery accepted" means
 // verify() returned true. Neither is read off the threat switches.
 
-import { concatBytes, randomBytes, utf8ToBytes } from '@noble/hashes/utils';
+import { concatBytes, randomBytes, utf8ToBytes } from '@noble/hashes/utils.js';
 import { combineKem, splitHybrid } from './kem.ts';
 import { SIGS, classicalSig, pqSig, splitHybridSig } from './sign.ts';
 import { bytesEqual } from './metrics.ts';

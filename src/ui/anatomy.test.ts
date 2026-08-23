@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { kemAnatomy, sigAnatomy } from './anatomy.ts';
 import { runKem, runSig } from '../crypto/session.ts';
 import { attemptKeyRecovery, attemptForgery } from '../crypto/attack.ts';
-import { utf8ToBytes } from '@noble/hashes/utils';
+import { utf8ToBytes } from '@noble/hashes/utils.js';
 
 const onlyClassical = { classicalBroken: true, pqBroken: false };
 const onlyPq = { classicalBroken: false, pqBroken: true };

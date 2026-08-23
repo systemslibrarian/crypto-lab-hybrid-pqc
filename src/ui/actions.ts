@@ -9,7 +9,7 @@ import {
   rebenchSig,
 } from '../crypto/session.ts';
 import { APPROACHES, type Approach } from '../crypto/types.ts';
-import { utf8ToBytes } from '@noble/hashes/utils';
+import { utf8ToBytes } from '@noble/hashes/utils.js';
 import { DEFAULT_MESSAGE, type Store } from './store.ts';
 
 export function establishKem(store: Store, a: Approach): void {

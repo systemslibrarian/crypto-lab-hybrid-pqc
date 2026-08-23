@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SIGS, hybridSig, classicalSig, pqSig } from './sign.ts';
-import { utf8ToBytes } from '@noble/hashes/utils';
+import { utf8ToBytes } from '@noble/hashes/utils.js';
 import type { Approach } from './types.ts';
 
 const APPROACHES: Approach[] = ['classical', 'pq', 'hybrid'];

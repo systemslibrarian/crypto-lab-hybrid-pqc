@@ -14,7 +14,7 @@ import { runKem, runSig, type KemSession, type SigRun } from './session.ts';
 import { attemptKeyRecovery, attemptForgery, kemStatus, sigStatus } from './attack.ts';
 import type { SecurityStatus, CompromiseState } from './compromise.ts';
 import { APPROACHES, type Approach } from './types.ts';
-import { utf8ToBytes } from '@noble/hashes/utils';
+import { utf8ToBytes } from '@noble/hashes/utils.js';
 
 export interface CellVerdict {
   kem: SecurityStatus;

@@ -13,11 +13,11 @@
 // thing the lab simulates is the *event* of an algorithm being broken (you
 // cannot actually solve X25519 in a browser) — see compromise.ts.
 
-import { x25519 } from '@noble/curves/ed25519';
+import { x25519 } from '@noble/curves/ed25519.js';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem.js';
-import { hkdf } from '@noble/hashes/hkdf';
-import { sha256 } from '@noble/hashes/sha256';
-import { concatBytes, randomBytes, utf8ToBytes } from '@noble/hashes/utils';
+import { hkdf } from '@noble/hashes/hkdf.js';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { concatBytes, randomBytes, utf8ToBytes } from '@noble/hashes/utils.js';
 import type { Approach, AlgoSpec } from './types.ts';
 
 export interface KeyPair {
