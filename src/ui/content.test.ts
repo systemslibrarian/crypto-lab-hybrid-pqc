@@ -23,4 +23,12 @@ describe('real-world section citations', () => {
     expect(hrefs.some((h) => h.includes('signal.org'))).toBe(true);
     expect(hrefs.some((h) => h.includes('security.apple.com'))).toBe(true);
   });
+
+  it('labels the deployed X25519MLKEM768 group as final RFC 10024', () => {
+    const tlsCard = [...section.querySelectorAll('.deploy-card')].find((card) => card.textContent?.includes('X25519MLKEM768'));
+    expect(tlsCard?.textContent).toContain('IETF RFC 10024 (final)');
+    expect(tlsCard?.querySelector('a.ref-link')?.getAttribute('href')).toBe('https://www.rfc-editor.org/rfc/rfc10024.html');
+    const standard = [...section.querySelectorAll('.standards li')].find((item) => item.textContent?.includes('RFC 10024'));
+    expect(standard?.textContent).toContain('Final (August 2026)');
+  });
 });

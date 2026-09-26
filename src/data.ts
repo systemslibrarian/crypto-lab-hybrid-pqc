@@ -49,10 +49,10 @@ export const DEPLOYMENTS: Deployment[] = [
     system: 'TLS 1.3 (Chrome, Firefox, Cloudflare, AWS)',
     scheme: 'X25519MLKEM768',
     note: 'A hybrid key-exchange group (IANA codepoint 0x11EC) negotiated by default in current browsers and CDNs. Both sides feed ml_kem_ss ‖ x25519_ss straight into the TLS key schedule.',
-    ref: 'https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/',
-    kind: 'IETF draft',
+    ref: 'https://www.rfc-editor.org/rfc/rfc10024.html',
+    kind: 'IETF RFC 10024 (final)',
     status: 'Default-on',
-    verified: VERIFIED,
+    verified: '2026-09-26',
   },
   {
     system: 'OpenSSH',
@@ -124,6 +124,14 @@ export const STANDARDS: Standard[] = [
     kind: 'NIST',
     status: 'Draft (IPD)',
     verified: VERIFIED,
+  },
+  {
+    id: 'RFC 10024',
+    title: 'PQ/T hybrid key agreement for TLS 1.3, including X25519MLKEM768',
+    ref: 'https://www.rfc-editor.org/rfc/rfc10024.html',
+    kind: 'IETF',
+    status: 'Final (August 2026)',
+    verified: '2026-09-26',
   },
   {
     id: 'IETF draft-ietf-tls-hybrid-design',
