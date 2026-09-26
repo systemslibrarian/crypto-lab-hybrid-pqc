@@ -161,7 +161,7 @@ export const PROTOCOL_FIDELITY: FidelityRow[] = [
   {
     system: 'TLS 1.3 · X25519MLKEM768',
     combine: 'ml_kem_ss ‖ x25519_ss → TLS key schedule',
-    note: 'Plain concatenation fed into HKDF-Extract (RFC 8446 §7.1).',
+    note: 'Plain concatenation fed into HKDF-Extract (RFC 9846 §7.1).',
   },
   {
     system: 'OpenSSH · mlkem768x25519-sha256',
