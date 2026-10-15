@@ -135,7 +135,7 @@ export const hybridSig: SigScheme = {
     const mldsaPub = publicKey.subarray(HS.pk.ed);
     const edSig = signature.subarray(0, HS.sig.ed);
     const mldsaSig = signature.subarray(HS.sig.ed);
-    // BOTH must verify. A forger has to defeat both schemes at once.
+    // BOTH must verify. A new-message forger must defeat both. This is not a SUF-CMA guarantee.
     return (
       classicalSig.verify(edPub, message, edSig) && pqSig.verify(mldsaPub, message, mldsaSig)
     );

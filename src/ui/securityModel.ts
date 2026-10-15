@@ -114,9 +114,16 @@ export function buildSecurityModel(store: Store): HTMLElement {
       el('button', { class: 'btn reset', type: 'button', onclick: () => resetDemo(store) }, '↺ Reset demo'),
     ]),
     el('p', { class: 'lede' }, [
-      'Hybrid’s promise: the session key and the signature stay secure as long as ',
+      'This model tests session-key recovery and forgery of a new message. The hybrid resists those attacks as long as ',
       el('strong', {}, 'at least one'),
       ' of the two algorithms is unbroken. Flip these switches and watch the key-exchange columns above and the signature columns below react in real time.',
+    ]),
+    el('p', { class: 'lede', id: 'signature-security-scope' }, [
+      'New-message unforgeability (EUF-CMA) is different from strong unforgeability (SUF-CMA), which also forbids a different valid signature for an already-signed message. After one component is compromised, an attacker can retain the intact signature and replace the compromised component on that same message. The AND verifier can accept it; this does not authorize a new message. ',
+      el('a', { href: 'https://datatracker.ietf.org/doc/html/draft-ietf-lamps-pq-composite-sigs-16#section-9.2.2' }, 'Composite ML-DSA §9.2.2'),
+      ' explains this limitation. Applications requiring SUF-CMA should not use Composite ML-DSA. The ',
+      el('a', { href: 'https://mailarchive.ietf.org/arch/msg/cfrg/HaPTmTOFZSBSjw1vbhXCeya0tH8/' }, 'CFRG discussion of 14 October 2026'),
+      ' is not an adoption call or a final standard.',
     ]),
     legend,
     el('div', { class: 'switches' }, [
