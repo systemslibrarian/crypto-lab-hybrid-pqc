@@ -69,9 +69,13 @@ export function buildTradeoffs(): HTMLElement {
 
 export function buildRealWorld(): HTMLElement {
   const refLink = (href: string, label: string) =>
-    el('a', { class: 'ref-link', href, target: '_blank', rel: 'noopener', 'aria-label': `${label} (source, opens in new tab)` }, [
-      'source ',
-      el('span', { 'aria-hidden': 'true' }, '↗'),
+    // The arrow is drawn from CSS and the name opens with the word the link
+    // shows. axe 4.14 compares the accessible name against everything a
+    // SIGHTED user sees (label-content-name-mismatch, WCAG 2.5.3 Label in
+    // Name) while excluding aria-hidden content from the NAME, so the arrow
+    // could not stay in the DOM and "source" had to be in the name.
+    el('a', { class: 'ref-link', href, target: '_blank', rel: 'noopener', 'aria-label': `source: ${label}, opens in a new tab` }, [
+      'source',
     ]);
 
   const badges = (kind: string, statusLabel: string, verified: string) =>

@@ -72,18 +72,39 @@ export function byteBars(opts: { caption: string; note: string; rows: ByteRow[] 
     (['B', 'KB', 'x'] as Unit[]).forEach((k) => unitBtns[k].setAttribute('aria-pressed', String(k === u)));
   };
   const mkBtn = (u: Unit, text: string, label?: string) => {
+    // A glyph-only button draws its mark from CSS and holds no text, so its
+    // aria-label is the whole name. axe cannot judge
+    // label-content-name-mismatch for a control whose visible text is a single
+    // character and files it as `incomplete` whatever the name says; with no
+    // DOM text there is nothing to compare. The mark is decoration here -- the
+    // meaning is "multiples of classical", which the name carries.
+    //
+    // The CSS is keyed on the aria-label, NOT on an added class: the
+    // non-text-contrast baseline records each control by its class list, so
+    // a new class reads as a brand-new control and the whole row reports as
+    // a regression. Measured here before this was changed back.
+    const glyphOnly = text === '×';
     const b = el('button', {
       class: 'unit-btn',
       type: 'button',
       'aria-pressed': String(u === 'B'),
-      // Glyph-only buttons ('×') need a spoken name of their own.
-      'aria-label': label,
+      // A spoken name for the ones whose text is a glyph or an abbreviation,
+      // opening with the text itself: axe 4.14 wants the accessible name to
+      // contain the visible text (label-content-name-mismatch, WCAG 2.5.3),
+      // and "kilobytes" does not contain "KB".
+      'aria-label': label ? (glyphOnly ? label : `${text}: ${label}`) : undefined,
       onclick: () => setUnit(u),
-    }, text);
+    }, glyphOnly ? '' : text);
     unitBtns[u] = b;
     return b;
   };
-  const toggle = el('div', { class: 'unit-toggle', role: 'group', 'aria-label': 'Size units' }, [
+  // No role="group" with a name here. The wrapper shows "B KB ×" and was
+  // named "Size units", which axe 4.14 reports as
+  // label-content-name-mismatch (WCAG 2.5.3 Label in Name): the accessible
+  // name has to contain the visible text, and no sensible group name does.
+  // The three buttons inside carry their own names, which is what a user
+  // actually operates; the wrapper is layout.
+  const toggle = el('div', { class: 'unit-toggle' }, [
     mkBtn('B', 'bytes'),
     mkBtn('KB', 'KB', 'kilobytes'),
     mkBtn('x', '×', 'multiples of classical'),
