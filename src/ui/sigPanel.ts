@@ -16,8 +16,8 @@ import { APPROACHES, type Approach } from '../crypto/types.ts';
 import type { Store } from './store.ts';
 
 const VERDICT: Record<SecurityStatus, { icon: string; label: string }> = {
-  secure: { icon: '✅', label: 'Unforgeable' },
-  'hedge-holding': { icon: '🛡️', label: 'Hedge holding' },
+  secure: { icon: '✅', label: 'Forgery rejected' },
+  'hedge-holding': { icon: '🛡️', label: 'Forgery rejected · one secret disclosed' },
   broken: { icon: '⛔', label: 'Forgery accepted' },
 };
 

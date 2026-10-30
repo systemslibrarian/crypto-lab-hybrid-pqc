@@ -18,13 +18,13 @@ export function buildHero(): HTMLElement {
       el('h1', { class: 'cl-hero-title' }, 'Hybrid PQC'),
       el('p', { class: 'cl-hero-sub' }, 'X25519 + ML-KEM-768 · Ed25519 + ML-DSA-65 · KEM combiner'),
       el('p', { class: 'cl-hero-desc' },
-        'Combine a classical and a post-quantum algorithm, then break either half and watch the hybrid session key and signature still hold — with real X25519, ML-KEM-768, Ed25519, and ML-DSA-65 running in your browser.',
+        'Combine classical and post-quantum algorithms, disclose either component secret, then inspect the key-recovery and forgery attempts — with real X25519, ML-KEM-768, Ed25519, and ML-DSA-65 running in your browser.',
       ),
     ]),
     el('aside', { class: 'cl-hero-why', 'aria-label': 'Why it matters' }, [
       el('span', { class: 'cl-hero-why-label' }, 'WHY IT MATTERS'),
       el('p', { class: 'cl-hero-why-text' },
-        'A “harvest now, decrypt later” adversary records traffic today to break it once quantum computers arrive. Pairing the two algorithms keeps a connection safe as long as one half stands, so migration never regresses security.',
+        'A “harvest now, decrypt later” adversary stores traffic for a future cryptographically relevant quantum computer. A carefully constructed hybrid can hedge against failure of either component; protocol design and implementation still matter.',
       ),
     ]),
   ]);
@@ -145,7 +145,7 @@ export function buildProtocolFidelity(): HTMLElement {
   );
   return el('section', { class: 'section', 'aria-labelledby': 'sec-fidelity' }, [
     el('h2', { id: 'sec-fidelity' }, '🔬 Lab vs. Real Protocols'),
-    el('p', { class: 'lede' }, 'This is a teaching model, not a wire format. Here is exactly how its combiner differs from the constructions deployed in production — all of which share the property that both secrets are required.'),
+    el('p', { class: 'lede' }, 'This is a teaching model, not a wire format. Compare its combiner with the constructions below. Each construction has its own security assumptions and protocol context; a successful or failed attempt here does not establish the security of those deployments.'),
     el('div', { class: 'table-scroll', tabindex: '0' }, [
       el('table', { class: 'fidelity' }, [el('thead', {}, head), el('tbody', {}, rows)]),
     ]),

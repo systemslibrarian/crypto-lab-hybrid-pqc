@@ -14,9 +14,9 @@ import { APPROACHES } from '../crypto/types.ts';
 import type { Store } from './store.ts';
 
 const CELL: Record<SecurityStatus, { icon: string; text: string }> = {
-  secure: { icon: '✅', text: 'Secure' },
-  'hedge-holding': { icon: '🛡️', text: 'Holds' },
-  broken: { icon: '⛔', text: 'Broken' },
+  secure: { icon: '✅', text: 'Attempts failed' },
+  'hedge-holding': { icon: '🛡️', text: 'Attempts failed' },
+  broken: { icon: '⛔', text: 'Attacks succeeded' },
 };
 
 const COL_LABEL = { classical: 'Classical', pq: 'PQ only', hybrid: 'Hybrid' } as const;
@@ -62,7 +62,7 @@ export function buildSurvivalMatrix(store: Store): HTMLElement {
   store.on('threats', paint);
 
   return el('figure', { class: 'survival' }, [
-    el('figcaption', {}, 'Who survives which break'),
+    el('figcaption', {}, 'Observed outcomes by modeled compromise'),
     el('div', { class: 'table-scroll', tabindex: '0' }, [
       el('table', { class: 'survival-table' }, [
         el(

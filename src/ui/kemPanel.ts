@@ -16,8 +16,8 @@ import { APPROACHES, type Approach } from '../crypto/types.ts';
 import type { Store } from './store.ts';
 
 const STATUS_META: Record<SecurityStatus, { icon: string; label: string }> = {
-  secure: { icon: '✅', label: 'Secure' },
-  'hedge-holding': { icon: '🛡️', label: 'Hedge holding' },
+  secure: { icon: '✅', label: 'Recovery failed' },
+  'hedge-holding': { icon: '🛡️', label: 'Recovery failed · one secret disclosed' },
   broken: { icon: '⛔', label: 'Key recovered' },
 };
 
@@ -170,9 +170,9 @@ export function buildKemPanel(store: Store): HTMLElement {
         el('code', {}, 'X25519MLKEM768'),
         ' group is simpler: it concatenates the two shared secrets (',
         el('code', {}, 'ml_kem_ss ‖ x25519_ss'),
-        ') straight into the TLS 1.3 key schedule. Both share the exact property this lab demonstrates — the result is unrecoverable unless you hold ',
-        el('strong', {}, 'both'),
-        ' secrets. The X25519 half is modeled as a DHKEM (its ephemeral public key plays the role of a ciphertext) so all three approaches expose one encapsulate / decapsulate interface. See the protocol-fidelity table below for how real systems combine the halves.',
+        ') straight into the TLS 1.3 key schedule. In this experiment, a failed recovery means the candidate key did not match the session key. It does not prove that every attack fails. A robust hybrid aims to preserve confidentiality when ',
+        el('strong', {}, 'at least one component remains secure'),
+        ', subject to the combiner and protocol assumptions. The X25519 half is modeled as a DHKEM (its ephemeral public key plays the role of a ciphertext) so all three approaches expose one encapsulate / decapsulate interface. See the protocol-fidelity table below for how real systems combine the halves.',
       ]),
     ]),
   ]);
