@@ -24,7 +24,7 @@ export const WHY_HYBRID: WhyPoint[] = [
   },
   {
     heading: 'Hybrid hedges both ways',
-    body: 'Combine the two and the connection stays secure as long as EITHER half holds: it survives a quantum computer (classical breaks, PQ holds) AND survives a surprise lattice break (PQ breaks, classical holds). You only lose if both fall at once.',
+    body: 'A robust hybrid aims to retain its specified security property when at least one component remains secure. That can hedge against a classical or post-quantum component failure, subject to the combiner and protocol assumptions. It does not remove implementation, authentication, or key-management risks.',
   },
 ];
 

@@ -56,7 +56,7 @@ describe('byteBars', () => {
     expect(total()).toBe('2,336 B');
     btn('KB').click();
     expect(total()).toBe('2.28 KB');
-    btn('×').click();
+    (f.querySelector('[aria-label="multiples of classical"]') as HTMLButtonElement).click();
     expect(total()).toBe('36.5×'); // 2336 / 64
   });
 });

@@ -22,10 +22,10 @@ interface TourStep extends Step {
 const STEPS: TourStep[] = [
   { title: 'Establish a session key all three ways.', target: 'sec-kem', takeaway: 'Same job, wildly different sizes — the hybrid carries both halves on the wire.', threat: { classicalBroken: false, pqBroken: false } },
   { title: 'Sign the message all three ways.', target: 'sec-sig', takeaway: 'An ML-DSA-65 signature is ~50× an Ed25519 one; the hybrid ships both.', threat: { classicalBroken: false, pqBroken: false } },
-  { title: 'A quantum computer arrives (classical falls).', target: 'sec-threat', takeaway: 'Classical-only collapses. Pure PQ is untouched. The hybrid is now hedge-holding.', threat: { classicalBroken: true, pqBroken: false } },
-  { title: 'Look at the key-exchange columns.', target: 'sec-kem', takeaway: 'The classical key is recovered — but the hybrid’s ML-KEM half still protects its session key.', threat: { classicalBroken: true, pqBroken: false } },
-  { title: 'Now imagine lattices ALSO fall (PQ breaks too).', target: 'sec-threat', takeaway: 'Only with BOTH halves broken at once does the hybrid finally fail.', threat: { classicalBroken: true, pqBroken: true } },
-  { title: 'Recap: back to a single break — the realistic case.', target: 'sec-kem', takeaway: 'With just one algorithm broken the hybrid holds. That’s the whole point: it survives any single failure, which is the threat we actually face.', threat: { classicalBroken: true, pqBroken: false } },
+  { title: 'A quantum computer arrives (classical falls).', target: 'sec-threat', takeaway: 'Disclosing the classical secrets lets these attacks succeed against classical-only; the PQ-only and hybrid attempts fail.', threat: { classicalBroken: true, pqBroken: false } },
+  { title: 'Look at the key-exchange columns.', target: 'sec-kem', takeaway: 'The classical key is recovered. The hybrid attempt uses a guess for the undisclosed ML-KEM secret and produces a different key.', threat: { classicalBroken: true, pqBroken: false } },
+  { title: 'Now imagine lattices ALSO fall (PQ breaks too).', target: 'sec-threat', takeaway: 'With both component secrets disclosed, this attack reconstructs the hybrid key and produces an accepted new-message forgery.', threat: { classicalBroken: true, pqBroken: true } },
+  { title: 'Recap: back to one modeled compromise.', target: 'sec-kem', takeaway: 'With one component secret disclosed, the displayed hybrid recovery and forgery attempts fail. General resilience still depends on the combiner and protocol assumptions.', threat: { classicalBroken: true, pqBroken: false } },
 ];
 
 /** Public for the URL loader to clamp the step param without a magic number. */

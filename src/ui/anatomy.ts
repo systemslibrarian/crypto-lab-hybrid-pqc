@@ -50,7 +50,7 @@ export function kemAnatomy(approach: Approach, r: KeyRecovery): HTMLElement {
       label: SECRET_LABEL[family],
       ok: !r.held.includes(family),
       okText: 'secret — attacker guessed',
-      badText: 'recovered',
+      badText: 'disclosed to attacker',
     });
   }
   if (approach !== 'hybrid') return list('Attacker’s view', secretRows);
@@ -58,7 +58,7 @@ export function kemAnatomy(approach: Approach, r: KeyRecovery): HTMLElement {
   return list('Attacker’s view', [
     ...secretRows,
     {
-      label: 'Combiner output (needs both)',
+      label: 'Attacker’s combiner output',
       // Measured: did the bytes the attacker derived equal the session key?
       ok: !r.matches,
       okText: 'did not match the session key',

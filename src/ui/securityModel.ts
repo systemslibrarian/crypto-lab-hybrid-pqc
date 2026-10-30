@@ -62,18 +62,18 @@ export function buildSecurityModel(store: Store): HTMLElement {
       icon = '✅';
       cls = 'secure';
       text =
-        'No algorithm is broken. The attacker ran anyway: no reconstructed key matched, and every forged signature was rejected. Flip a switch to simulate a break.';
+        'No component secret is disclosed. The attacker ran anyway: no reconstructed key matched, and every forged signature was rejected. Flip a switch to simulate a break.';
     } else if (fell.length === APPROACHES.length) {
       icon = '⛔';
       cls = 'broken';
-      text = `Both families are broken. The attacker reconstructed the session key and the verifier accepted a forgery for all three approaches — hybrid included. The hedge only buys time against ONE break at a time, which is the realistic threat.`;
+      text = `Both families are modeled as compromised. The attacker reconstructed the session key and the verifier accepted a forgery for all three approaches — hybrid included. This records the outcome under the selected secret-disclosure model.`;
     } else {
       const cause = classicalBroken
-        ? 'A quantum computer broke X25519 / Ed25519'
-        : 'A lattice break defeated ML-KEM / ML-DSA';
+        ? 'The classical X25519 / Ed25519 secrets are disclosed'
+        : 'The post-quantum ML-KEM / ML-DSA secrets are disclosed';
       const survivor = classicalBroken
-        ? 'its ML-KEM / ML-DSA half still requires a lattice break'
-        : 'its classical half still requires breaking discrete log';
+        ? 'the attacker did not receive the ML-KEM / ML-DSA secrets'
+        : 'the attacker did not receive the X25519 / Ed25519 secrets';
       icon = '🛡️';
       cls = 'hedge';
       text = `${cause}. The attack succeeded against ${names(fell) || 'nothing'} — key recovered, forgery accepted. It was run against ${names(
@@ -103,9 +103,9 @@ export function buildSecurityModel(store: Store): HTMLElement {
   );
 
   const legend = el('div', { class: 'status-legend', 'aria-hidden': 'true' }, [
-    el('span', { class: 'sl' }, [el('span', { class: 'sl-dot sl-secure' }), '✅ Secure']),
+    el('span', { class: 'sl' }, [el('span', { class: 'sl-dot sl-secure' }), '✅ Attempts failed']),
     el('span', { class: 'sl' }, [el('span', { class: 'sl-dot sl-hedge' }), '🛡️ Hedge holding (one half down)']),
-    el('span', { class: 'sl' }, [el('span', { class: 'sl-dot sl-broken' }), '⛔ Broken']),
+    el('span', { class: 'sl' }, [el('span', { class: 'sl-dot sl-broken' }), '⛔ Attacks succeeded']),
   ]);
 
   const section = el('section', { class: 'section', 'aria-labelledby': 'sec-threat' }, [
@@ -114,12 +114,12 @@ export function buildSecurityModel(store: Store): HTMLElement {
       el('button', { class: 'btn reset', type: 'button', onclick: () => resetDemo(store) }, '↺ Reset demo'),
     ]),
     el('p', { class: 'lede' }, [
-      'This model tests session-key recovery and forgery of a new message. The hybrid resists those attacks as long as ',
+      'This model runs specific session-key recovery and new-message forgery attempts. A robust hybrid aims to preserve the relevant security property while ',
       el('strong', {}, 'at least one'),
-      ' of the two algorithms is unbroken. Flip these switches and watch the key-exchange columns above and the signature columns below react in real time.',
+      ' component remains secure, under the combiner and protocol assumptions. The displayed failures are not a general security proof. Flip these switches to disclose component secrets and inspect the resulting attempts.',
     ]),
     el('p', { class: 'lede', id: 'signature-security-scope' }, [
-      'New-message unforgeability (EUF-CMA) is different from strong unforgeability (SUF-CMA), which also forbids a different valid signature for an already-signed message. After one component is compromised, an attacker can retain the intact signature and replace the compromised component on that same message. The AND verifier can accept it; this does not authorize a new message. ',
+      'Both component signatures must verify: that is the acceptance rule. A suitably constructed hybrid can retain new-message unforgeability when one component remains unforgeable. New-message unforgeability (EUF-CMA) is different from strong unforgeability (SUF-CMA), which also forbids a different valid signature for an already-signed message. After one component is compromised, an attacker can retain the intact signature and replace the compromised component on that same message. The AND verifier can accept it; this does not authorize a new message. ',
       el('a', { href: 'https://datatracker.ietf.org/doc/html/draft-ietf-lamps-pq-composite-sigs-16#section-9.2.2' }, 'Composite ML-DSA §9.2.2'),
       ' explains this limitation. Applications requiring SUF-CMA should not use Composite ML-DSA. The ',
       el('a', { href: 'https://mailarchive.ietf.org/arch/msg/cfrg/HaPTmTOFZSBSjw1vbhXCeya0tH8/' }, 'CFRG discussion of 14 October 2026'),
@@ -127,8 +127,8 @@ export function buildSecurityModel(store: Store): HTMLElement {
     ]),
     legend,
     el('div', { class: 'switches' }, [
-      toggle('break-classical', 'classicalBroken', 'Quantum computer exists', 'Breaks X25519 & Ed25519 (Shor)'),
-      toggle('break-pq', 'pqBroken', 'Lattices fall', 'Breaks ML-KEM & ML-DSA'),
+      toggle('break-classical', 'classicalBroken', 'Quantum computer exists', 'Models a Shor-capable computer: discloses classical secrets'),
+      toggle('break-pq', 'pqBroken', 'Lattices fall', 'Models a component compromise: discloses PQ secrets'),
     ]),
     summary,
     buildSurvivalMatrix(store),
