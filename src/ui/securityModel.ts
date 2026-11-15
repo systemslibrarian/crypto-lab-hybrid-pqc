@@ -120,7 +120,7 @@ export function buildSecurityModel(store: Store): HTMLElement {
     ]),
     el('p', { class: 'lede', id: 'signature-security-scope' }, [
       'Both component signatures must verify: that is the acceptance rule. A suitably constructed hybrid can retain new-message unforgeability when one component remains unforgeable. New-message unforgeability (EUF-CMA) is different from strong unforgeability (SUF-CMA), which also forbids a different valid signature for an already-signed message. After one component is compromised, an attacker can retain the intact signature and replace the compromised component on that same message. The AND verifier can accept it; this does not authorize a new message. ',
-      el('a', { href: 'https://datatracker.ietf.org/doc/html/draft-ietf-lamps-pq-composite-sigs-16#section-9.2.2' }, 'Composite ML-DSA §9.2.2'),
+      el('a', { href: 'https://www.rfc-editor.org/rfc/rfc10073.html#section-9.2.2' }, 'RFC 10073 (Composite ML-DSA) §9.2.2'),
       ' explains this limitation. Applications requiring SUF-CMA should not use Composite ML-DSA. The ',
       el('a', { href: 'https://mailarchive.ietf.org/arch/msg/cfrg/HaPTmTOFZSBSjw1vbhXCeya0tH8/' }, 'CFRG discussion of 14 October 2026'),
       ' is not an adoption call or a final standard.',
