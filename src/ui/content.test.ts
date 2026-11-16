@@ -24,6 +24,23 @@ describe('real-world section citations', () => {
     expect(hrefs.some((h) => h.includes('security.apple.com'))).toBe(true);
   });
 
+  it('names Kyber, not ML-KEM, for PQXDH and PQ3', () => {
+    // Both protocols predate FIPS 203 and both published designs say Kyber.
+    // The PQXDH specification (Revision 3, last updated 2024-01-23) defines
+    // its pqkem with the example "Crystals-Kyber-1024" and never mentions
+    // ML-KEM; Apple's PQ3 announcement (21 February 2024) registers "a
+    // post-quantum Kyber-1024 key encapsulation public key" and instantiates
+    // the ratchet KEM with Kyber-768. Read at both sources on 2026-11-15.
+    const card = (system: string) =>
+      [...section.querySelectorAll('.deploy-card')].find((c) => c.textContent?.includes(system));
+    const signal = card('PQXDH');
+    expect(signal?.textContent).toContain('CRYSTALS-Kyber-1024');
+    expect(signal?.textContent).not.toContain('ML-KEM-1024');
+    const apple = card('PQ3');
+    expect(apple?.textContent).toContain('Kyber-1024');
+    expect(apple?.textContent).not.toMatch(/PQ3 \(ECDH \+ ML-KEM/);
+  });
+
   it('labels the deployed X25519MLKEM768 group as final RFC 10024', () => {
     const tlsCard = [...section.querySelectorAll('.deploy-card')].find((card) => card.textContent?.includes('X25519MLKEM768'));
     expect(tlsCard?.textContent).toContain('IETF RFC 10024 (final)');

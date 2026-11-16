@@ -65,21 +65,21 @@ export const DEPLOYMENTS: Deployment[] = [
   },
   {
     system: 'Signal',
-    scheme: 'PQXDH (X25519 + ML-KEM-1024)',
-    note: 'The Signal protocol’s initial key agreement (X3DH) was upgraded to the hybrid PQXDH and deployed in late 2023.',
+    scheme: 'PQXDH (X25519 + CRYSTALS-Kyber-1024)',
+    note: 'The Signal protocol’s initial key agreement (X3DH) was upgraded to the hybrid PQXDH and deployed in late 2023. The specification (Revision 3, last updated 2024-01-23) defines its pqkem with the example “Crystals-Kyber-1024” and never names ML-KEM.',
     ref: 'https://signal.org/docs/specifications/pqxdh/',
     kind: 'Protocol spec',
     status: 'Deployed',
-    verified: VERIFIED,
+    verified: '2026-11-15',
   },
   {
     system: 'Apple iMessage',
-    scheme: 'PQ3 (ECDH + ML-KEM, PQ ratchet)',
-    note: 'Combines classical ECDH with ML-KEM (Kyber) for the initial key and re-establishes PQ keys continuously. Rolled out in iOS 17.4 (2024).',
+    scheme: 'PQ3 (ECDH + Kyber-1024, PQ ratchet)',
+    note: 'Combines classical P-256 ECDH with a Kyber-1024 KEM for the initial key and re-establishes PQ keys continuously, the ratchet KEM instantiated with Kyber-768. Announced 21 February 2024, before FIPS 203 existed; rolled out in iOS 17.4.',
     ref: 'https://security.apple.com/blog/imessage-pq3/',
     kind: 'Vendor research',
     status: 'Deployed',
-    verified: VERIFIED,
+    verified: '2026-11-15',
   },
 ];
 
