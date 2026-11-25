@@ -62,9 +62,12 @@ export function ensurePopulated(store: Store): void {
 }
 
 export function setThreat(store: Store, which: 'classicalBroken' | 'pqBroken', value: boolean): void {
+  const leavingTour = store.state.step >= 0 && store.state.threats[which] !== value;
+  if (leavingTour) store.state.step = -1;
   store.state.threats[which] = value;
   ensurePopulated(store);
   store.emit('threats', 'kem', 'sig');
+  if (leavingTour) store.emit('step');
 }
 
 export function resetDemo(store: Store): void {

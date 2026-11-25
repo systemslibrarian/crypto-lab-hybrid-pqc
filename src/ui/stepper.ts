@@ -31,7 +31,7 @@ const STEPS: TourStep[] = [
 /** Public for the URL loader to clamp the step param without a magic number. */
 export const STEP_COUNT = STEPS.length;
 
-function threatFor(i: number): { classicalBroken: boolean; pqBroken: boolean } {
+export function threatFor(i: number): { classicalBroken: boolean; pqBroken: boolean } {
   return { ...STEPS[i].threat };
 }
 

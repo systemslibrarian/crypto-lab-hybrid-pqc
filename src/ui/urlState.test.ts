@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { applyUrl, initUrlSync } from './urlState.ts';
 import { Store } from './store.ts';
+import { setThreat } from './actions.ts';
 
 describe('shareable URL state', () => {
   beforeEach(() => {
@@ -25,6 +26,34 @@ describe('shareable URL state', () => {
     const store = new Store();
     applyUrl(store);
     expect(store.state.message).toBe('hello world');
+  });
+
+  it('a link to a tour step loads the switches used by its narration', () => {
+    window.history.replaceState(null, '', '/?step=4');
+    const store = new Store();
+    applyUrl(store);
+    expect(store.state.step).toBe(4);
+    expect(store.state.threats).toEqual({ classicalBroken: true, pqBroken: true });
+  });
+
+  it('keeps explicitly saved switches when old tour narration conflicts with them', () => {
+    window.history.replaceState(null, '', '/?q=1&step=2');
+    const store = new Store();
+    applyUrl(store);
+    expect(store.state.step).toBe(-1);
+    expect(store.state.threats).toEqual({ classicalBroken: false, pqBroken: true });
+  });
+
+  it('a manual switch change exits the tour and shares the new situation', () => {
+    window.history.replaceState(null, '', '/?c=1&step=2');
+    const store = new Store();
+    applyUrl(store);
+    initUrlSync(store);
+    setThreat(store, 'classicalBroken', true);
+    expect(store.state.step).toBe(2);
+    setThreat(store, 'classicalBroken', false);
+    expect(store.state.step).toBe(-1);
+    expect(window.location.search).toBe('');
   });
 
   it('writes only non-secret state to the URL on change', () => {

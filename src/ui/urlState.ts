@@ -4,7 +4,7 @@
 // they are recomputed locally on load. Param keys are short on purpose.
 
 import { ensurePopulated } from './actions.ts';
-import { STEP_COUNT } from './stepper.ts';
+import { STEP_COUNT, threatFor } from './stepper.ts';
 import { DEFAULT_MESSAGE, type Store } from './store.ts';
 
 export const MAX_MSG = 280;
@@ -24,10 +24,18 @@ export function applyUrl(store: Store): void {
   const msg = params.get('msg');
   if (msg !== null) store.state.message = msg.slice(0, MAX_MSG);
 
-  const step = params.get('step');
-  if (step !== null) {
-    const n = parseInt(step, 10);
-    if (Number.isFinite(n)) store.state.step = Math.max(-1, Math.min(STEP_COUNT - 1, n));
+  const requestedStep = parseInt(params.get('step') ?? '', 10);
+  if (Number.isFinite(requestedStep) && requestedStep >= 0) {
+    const step = Math.min(STEP_COUNT - 1, requestedStep);
+    const expected = threatFor(step);
+    const hasSwitches = params.has('c') || params.has('q');
+    const switchesMatch = store.state.threats.classicalBroken === expected.classicalBroken
+      && store.state.threats.pqBroken === expected.pqBroken;
+    // Older links could record manual switches alongside an unrelated tour step.
+    if (!hasSwitches || switchesMatch) {
+      store.state.step = step;
+      store.state.threats = expected;
+    }
   }
 
   // If the shared state implies broken algorithms or an active tour, populate
