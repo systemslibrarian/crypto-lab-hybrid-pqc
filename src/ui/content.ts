@@ -120,7 +120,7 @@ export function buildRealWorld(): HTMLElement {
 
   return el('section', { class: 'section', 'aria-labelledby': 'sec-real' }, [
     el('h2', { id: 'sec-real' }, '🌐 Real-World Context'),
-    el('p', { class: 'lede' }, 'Hybrid is not theoretical — it is already the default in the protocols you used to load this page.'),
+    el('p', { class: 'lede' }, 'Hybrid is not theoretical — standardized constructions are deployed in current TLS, SSH and messaging systems. Whether a particular connection negotiated one must be measured rather than assumed.'),
     el('h3', { class: 'subhead' }, 'Deployed today'),
     deployments,
     el('h3', { class: 'subhead' }, 'Standards'),

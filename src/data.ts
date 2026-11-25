@@ -46,13 +46,13 @@ export interface Deployment {
 
 export const DEPLOYMENTS: Deployment[] = [
   {
-    system: 'TLS 1.3 (Chrome, Firefox, Cloudflare, AWS)',
+    system: 'TLS 1.3 (modern browsers and Cloudflare)',
     scheme: 'X25519MLKEM768',
-    note: 'A hybrid key-exchange group (IANA codepoint 0x11EC) negotiated by default in current browsers and CDNs. Both sides feed ml_kem_ss ‖ x25519_ss straight into the TLS key schedule.',
-    ref: 'https://www.rfc-editor.org/rfc/rfc10024.html',
-    kind: 'IETF RFC 10024 (final)',
-    status: 'Default-on',
-    verified: '2026-09-26',
+    note: 'Current Chrome and Firefox releases enable the hybrid group by default, and Cloudflare deploys it. An individual connection still depends on both endpoints and their configuration. RFC 10024 assigns IANA codepoint 0x11EC and defines the 64-byte shared secret as ml_kem_ss ‖ x25519_ss.',
+    ref: 'https://developers.cloudflare.com/ssl/post-quantum-cryptography/pqc-support/',
+    kind: 'Cloudflare deployment docs',
+    status: 'Supported; negotiate to confirm',
+    verified: '2026-11-25',
   },
   {
     system: 'OpenSSH',
@@ -161,7 +161,7 @@ export const PROTOCOL_FIDELITY: FidelityRow[] = [
   {
     system: 'TLS 1.3 · X25519MLKEM768',
     combine: 'ml_kem_ss ‖ x25519_ss → TLS key schedule',
-    note: 'Plain concatenation fed into HKDF-Extract (RFC 9846 §7.1).',
+    note: 'RFC 10024 §4.3 fixes the two-secret order; RFC 9846 §7.1 then processes that asymmetric shared secret in the TLS key schedule.',
   },
   {
     system: 'OpenSSH · mlkem768x25519-sha256',

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect } from 'vitest';
-import { buildRealWorld } from './content.ts';
+import { buildProtocolFidelity, buildRealWorld } from './content.ts';
 import { DEPLOYMENTS, STANDARDS } from '../data.ts';
 
 describe('real-world section citations', () => {
@@ -41,13 +41,28 @@ describe('real-world section citations', () => {
     expect(apple?.textContent).not.toMatch(/PQ3 \(ECDH \+ ML-KEM/);
   });
 
-  it('labels the deployed X25519MLKEM768 group as final RFC 10024', () => {
+  it('separates deployed X25519MLKEM768 support from the final standard', () => {
     const tlsCard = [...section.querySelectorAll('.deploy-card')].find((card) => card.textContent?.includes('X25519MLKEM768'));
-    expect(tlsCard?.textContent).toContain('IETF RFC 10024 (final)');
-    expect(tlsCard?.querySelector('a.ref-link')?.getAttribute('href')).toBe('https://www.rfc-editor.org/rfc/rfc10024.html');
+    expect(tlsCard?.textContent).toContain('negotiate to confirm');
+    expect(tlsCard?.textContent).toContain('depends on both endpoints');
+    expect(tlsCard?.querySelector('a.ref-link')?.getAttribute('href')).toBe('https://developers.cloudflare.com/ssl/post-quantum-cryptography/pqc-support/');
     const standard = [...section.querySelectorAll('.standards li')].find((item) => item.textContent?.includes('RFC 10024'));
     expect(standard?.textContent).toContain('Standards Track RFC (August 2026)');
   });
+
+  it('does not infer the negotiated protocol from merely loading the lesson', () => {
+    expect(section.textContent).toContain('must be measured rather than assumed');
+    expect(section.textContent).not.toContain('protocols you used to load this page');
+  });
+});
+
+it('attributes the hybrid secret order to RFC 10024 before the TLS key schedule', () => {
+  const section = buildProtocolFidelity();
+  const tls = [...section.querySelectorAll('tbody tr')].find((row) =>
+    row.textContent?.includes('X25519MLKEM768'),
+  );
+  expect(tls?.textContent).toContain('RFC 10024 §4.3 fixes the two-secret order');
+  expect(tls?.textContent).toContain('RFC 9846 §7.1');
 });
 
 it('renders final KEM guidance and the separate Informational hybrid RFC',()=>{
